@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ficha de Entrevista</title>
+<title>Ficha de Entrevista - OCR PRO v10.0 | Antonio Altuna 2026</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
 <script src="https://docs.opencv.org/4.8.0/opencv.js" async></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -187,8 +187,8 @@ h3{color:var(--primary-dark);margin:16px 0 10px;font-size:1.02em}
 
 <div class="container">
   <header>
-    <h1>📋 Ficha de Entrevista - OCR PRO Cédula Venezuela <span class="pro-badge">v12.0 PINCEL INTERACTIVO</span></h1>
-    <p>Pinta/subraya con el mouse o dedo las zonas de texto + Extracción Multi-Pasada KYC</p>
+    <h1>📋 Ficha de Entrevista - OCR PRO Cédula Venezuela <span class="pro-badge">v13.0 AUTO-ORIENTACIÓN 360°</span></h1>
+    <p>Detección inteligente de ángulo e inclinación + Pincel interactivo + Extracción KYC</p>
     <div class="contact">
       <span>👤 Antonio Altuna</span>
       <span>📅 2026</span>
@@ -271,7 +271,7 @@ h3{color:var(--primary-dark);margin:16px 0 10px;font-size:1.02em}
     <div class="btn-group" style="margin-top:15px">
       <button class="btn btn-success" id="btnProcesarOCR" disabled>🔍 PROCESAR OCR EMPRESARIAL</button>
       <select id="selModoPreproc" style="padding:10px;border-radius:8px;border:1px solid var(--border);font-weight:600">
-        <option value="auto_kyc">Modo: Automático (Usa Pincel si pintaste, o Recorte KYC)</option>
+        <option value="auto_kyc">Modo: Auto-Orientación 360° + Pincel/KYC</option>
         <option value="completo">Modo: Documento Completo (Sin recortes)</option>
         <option value="binario">Modo: Binarización Fuerte (Cédulas muy gastadas)</option>
       </select>
@@ -545,6 +545,125 @@ function generarVariantesPreprocesamiento(canvasBase, modo, maskCanvas = null) {
   }
 
   return variantes;
+}
+
+// ==================== AUTO-ENDEREZAMIENTO (DESKEW) Y ROTACIÓN 360° ====================
+/**
+ * Detecta el ángulo fino de inclinación de las líneas de texto (-45° a +45°)
+ * usando dilatación horizontal y cv.minAreaRect, y rota el lienzo para dejar el texto recto.
+ */
+function autoEnderezarInclinacion(canvasFuente) {
+  if (typeof cv === 'undefined' || !cv.Mat) return canvasFuente;
+  let src, gray, inv, kernel, closed, contours, hierarchy, M, dst;
+  try {
+    src = cv.imread(canvasFuente);
+    gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+    inv = new cv.Mat();
+    cv.threshold(gray, inv, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU);
+
+    // Conectar letras horizontalmente para formar bloques de líneas
+    kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(25, 3));
+    closed = new cv.Mat();
+    cv.morphologyEx(inv, closed, cv.MORPH_CLOSE, kernel);
+
+    contours = new cv.MatVector();
+    hierarchy = new cv.Mat();
+    cv.findContours(closed, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+    const angulos = [];
+    for (let i = 0; i < contours.size(); i++) {
+      const cnt = contours.get(i);
+      const area = cv.contourArea(cnt);
+      if (area > 400) {
+        const rect = cv.minAreaRect(cnt);
+        let angle = rect.angle;
+        if (rect.size.width < rect.size.height) {
+          angle += 90;
+        }
+        // Normalizar ángulo al rango [-45, 45]
+        while (angle > 45) angle -= 90;
+        while (angle < -45) angle += 90;
+        if (Math.abs(angle) > 0.6 && Math.abs(angle) < 35) {
+          angulos.push(angle);
+        }
+      }
+      cnt.delete();
+    }
+
+    if (angulos.length === 0) return canvasFuente;
+
+    // Mediana de los ángulos detectados para evitar valores atípicos
+    angulos.sort((a, b) => a - b);
+    const medianaAngulo = angulos[Math.floor(angulos.length / 2)];
+    if (Math.abs(medianaAngulo) < 0.8) return canvasFuente;
+
+    const center = new cv.Point(src.cols / 2, src.rows / 2);
+    M = cv.getRotationMatrix2D(center, medianaAngulo, 1.0);
+    dst = new cv.Mat();
+    cv.warpAffine(
+      src,
+      dst,
+      M,
+      new cv.Size(src.cols, src.rows),
+      cv.INTER_CUBIC,
+      cv.BORDER_CONSTANT,
+      new cv.Scalar(255, 255, 255, 255)
+    );
+
+    const out = document.createElement('canvas');
+    out.width = dst.cols;
+    out.height = dst.rows;
+    cv.imshow(out, dst);
+    log(`📐 Inclinación corregida automáticamente (${medianaAngulo.toFixed(1)}°)`, 'info');
+    return out;
+  } catch (e) {
+    return canvasFuente;
+  } finally {
+    if (src) src.delete();
+    if (gray) gray.delete();
+    if (inv) inv.delete();
+    if (kernel) kernel.delete();
+    if (closed) closed.delete();
+    if (contours) contours.delete();
+    if (hierarchy) hierarchy.delete();
+    if (M) M.delete();
+    if (dst) dst.delete();
+  }
+}
+
+/**
+ * Rota un canvas en múltiplos de 90 grados (90, 180, 270)
+ */
+function rotarCanvasGrados(canvasFuente, grados) {
+  const rad = (grados % 360) * Math.PI / 180;
+  if (rad === 0) return canvasFuente;
+  const swap = (grados === 90 || grados === 270);
+  const c = document.createElement('canvas');
+  c.width = swap ? canvasFuente.height : canvasFuente.width;
+  c.height = swap ? canvasFuente.width : canvasFuente.height;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.translate(c.width / 2, c.height / 2);
+  ctx.rotate(rad);
+  ctx.drawImage(canvasFuente, -canvasFuente.width / 2, -canvasFuente.height / 2);
+  return c;
+}
+
+/**
+ * Evalúa la calidad estructural de los datos extraídos para decidir la orientación correcta
+ */
+function puntuarExtraccion(datos) {
+  let score = 0;
+  if (datos.numero.valido) score += 40;
+  if (datos.apellidos.valido) score += 25;
+  if (datos.nombres.valido) score += 25;
+  if (datos.fecha_nac.valido) score += 20;
+  if (datos.estado_civil.valido) score += 10;
+  if (datos.nacionalidad.valido) score += 10;
+  return score;
 }
 
 window.addEventListener('load', () => {
@@ -1007,8 +1126,11 @@ function aplicarMascaraPincel(imgCanvas, maskCanvas) {
   fCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
   fCtx.drawImage(masked, pad, pad);
 
+  // Enderezar inclinación si el usuario pintó sobre una foto torcida
+  const enderezado = autoEnderezarInclinacion(finalCanvas);
+
   // Normalizar ancho óptimo (~1350px) para Tesseract
-  return normalizarTamano(finalCanvas, 1350);
+  return normalizarTamano(enderezado, 1350);
 }
 
 // Botón rotar imagen por si la foto se tomó vertical
@@ -1137,16 +1259,12 @@ function detectarCedula(imgElement) {
       });
     }
     bestContour.delete();
-
-    pts.sort((a,b) => a.y - b.y);
-    const top = pts.slice(0,2).sort((a,b) => a.x - b.x);
-    const bot = pts.slice(2,4).sort((a,b) => a.x - b.x);
-
-    // Verificar proporción rectangular válida (cédula ~ 1.58:1)
+    // Normalizar ángulo al rango [-45, 45]
     const wTop = Math.hypot(top[1].x - top[0].x, top[1].y - top[0].y);
     const hLeft = Math.hypot(bot[0].x - top[0].x, bot[0].y - top[0].y);
     const ratio = wTop / (hLeft || 1);
-    if (ratio < 1.2 || ratio > 2.0) return null;
+    // Permitir tanto horizontal (1.2 a 2.0) como vertical (0.5 a 0.85)
+    if (!((ratio >= 1.2 && ratio <= 2.0) || (ratio >= 0.5 && ratio <= 0.85))) return null;
 
     return [top[0], top[1], bot[1], bot[0]];
   } catch(e) {
@@ -1167,13 +1285,17 @@ function aplicarHomografia(imgElement, corners) {
   let src, dstCorners, srcCorners, M, dst;
   try {
     src = cv.imread(imgElement);
+    const wTop = Math.hypot(corners[1].x - corners[0].x, corners[1].y - corners[0].y);
+    const hLeft = Math.hypot(corners[3].x - corners[0].x, corners[3].y - corners[0].y);
+    // Si el contorno detectado está vertical, enderezar directamente a formato horizontal
+    const esVertical = hLeft > wTop;
     const dstW = 1450;
     const dstH = Math.round(dstW / 1.585);
     dstCorners = cv.matFromArray(4, 1, cv.CV_32FC2, [0,0, dstW-1,0, dstW-1,dstH-1, 0,dstH-1]);
-    srcCorners = cv.matFromArray(4, 1, cv.CV_32FC2, [
-      corners[0].x,corners[0].y, corners[1].x,corners[1].y,
-      corners[2].x,corners[2].y, corners[3].x,corners[3].y
-    ]);
+    const ptsSrc = esVertical
+      ? [corners[3].x,corners[3].y, corners[0].x,corners[0].y, corners[1].x,corners[1].y, corners[2].x,corners[2].y]
+      : [corners[0].x,corners[0].y, corners[1].x,corners[1].y, corners[2].x,corners[2].y, corners[3].x,corners[3].y];
+    srcCorners = cv.matFromArray(4, 1, cv.CV_32FC2, ptsSrc);
     M = cv.getPerspectiveTransform(srcCorners, dstCorners);
     dst = new cv.Mat();
     cv.warpPerspective(src, dst, M, new cv.Size(dstW, dstH), cv.INTER_CUBIC, cv.BORDER_CONSTANT, new cv.Scalar());
@@ -1473,48 +1595,104 @@ async function procesarOCR() {
       cedulaBase = normalizarTamano(img, 1500);
       maskParaUsar = overlay;
     } else {
-      log('📐 Detectando contorno de cédula automáticamente...', 'info');
+      log('📐 Detectando contorno e inclinación de cédula...', 'info');
       setProgress(20);
       const corners = detectarCedula(img);
       if (corners) {
-        log('✅ Perspectiva corregida automáticamente', 'success');
+        log('✅ Perspectiva y ángulo corregidos automáticamente', 'success');
         cedulaBase = aplicarHomografia(img, corners);
       } else {
-        cedulaBase = normalizarTamano(img, 1400);
+        cedulaBase = autoEnderezarInclinacion(normalizarTamano(img, 1400));
       }
     }
 
-    log('✂️ Aislando texto y generando filtros anti-ruido...', 'info');
-    setProgress(30);
-    const variantes = generarVariantesPreprocesamiento(cedulaBase, modoPreproc, maskParaUsar);
-
-    // Mostrar la variante principal en la vista previa
-    $('cedulaProcessedPreview').innerHTML = '';
-    $('cedulaProcessedPreview').appendChild(variantes[0].canvas);
-
     const worker = await obtenerWorkerTesseract();
 
-    // Pasada 1: Filtro Principal (CLAHE / Binarizado)
-    log(`📖 Pasada 1 (${variantes[0].nombre})...`, 'info');
-    setProgress(45);
-    const p1 = await worker.recognize(variantes[0].canvas);
-    const datos1 = extraerDatosCedulaVenezuela(p1.data.text || '');
-    const validos1 = Object.values(datos1).filter(r => r.valido).length;
-    log(`   ↳ Detectados ${validos1}/6 campos en Pasada 1`, validos1 >= 4 ? 'success' : 'info');
-
-    let resultadosFinales = datos1;
-    let textoLog = `--- PASADA 1 (${variantes[0].nombre}) ---\n${p1.data.text}`;
-
-    // Pasada 2: Si faltó algún campo importante, ejecutar segunda pasada en Grises Calibrados
-    if (validos1 < 5 && variantes.length > 1) {
-      log(`📖 Pasada 2 de respaldo (${variantes[1].nombre})...`, 'info');
-      setProgress(72);
-      const p2 = await worker.recognize(variantes[1].canvas);
-      const datos2 = extraerDatosCedulaVenezuela(p2.data.text || '');
-      resultadosFinales = fusionarResultados(datos1, datos2);
-      textoLog += `\n--- PASADA 2 (${variantes[1].nombre}) ---\n${p2.data.text}`;
+    // Determinar ángulos candidatos a evaluar:
+    // - Si el usuario usó el pincel y la selección es vertical (alto > ancho * 1.15), probar 270° y 90° además de 0°
+    // - En modo automático, si la imagen es vertical probar 90° y 270°; si es horizontal probar 0° y si falla probar 180° (boca abajo)
+    let angulosProbar = [0];
+    if (usarPincel) {
+      const variantesPreview = generarVariantesPreprocesamiento(cedulaBase, modoPreproc, maskParaUsar);
+      const cTest = variantesPreview[0].canvas;
+      if (cTest.height > cTest.width * 1.15) {
+        angulosProbar = [270, 90, 0, 180];
+      } else {
+        angulosProbar = [0, 180];
+      }
+    } else {
+      if (cedulaBase.height > cedulaBase.width * 1.05) {
+        log('🔄 Imagen en vertical detectada: evaluando orientaciones...', 'info');
+        angulosProbar = [270, 90, 0, 180];
+      } else {
+        angulosProbar = [0, 180];
+      }
     }
 
+    let mejorScore = -1;
+    let mejorDatos = null;
+    let mejorCanvas = null;
+    let mejorAngulo = 0;
+    let textoLog = '';
+
+    for (let i = 0; i < angulosProbar.length; i++) {
+      const ang = angulosProbar[i];
+      setProgress(30 + (i / angulosProbar.length) * 55);
+
+      let canvasEvaluar;
+      if (usarPincel) {
+        const baseRecorte = generarVariantesPreprocesamiento(cedulaBase, modoPreproc, maskParaUsar)[0].canvas;
+        canvasEvaluar = ang === 0 ? baseRecorte : autoEnderezarInclinacion(rotarCanvasGrados(baseRecorte, ang));
+      } else {
+        const cedulaRotada = ang === 0 ? cedulaBase : autoEnderezarInclinacion(rotarCanvasGrados(cedulaBase, ang));
+        const variantes = generarVariantesPreprocesamiento(cedulaRotada, modoPreproc, null);
+        canvasEvaluar = variantes[0].canvas;
+      }
+
+      log(`🧭 Analizando orientación ${ang}°...`, 'info');
+      const p = await worker.recognize(canvasEvaluar);
+      const datos = extraerDatosCedulaVenezuela(p.data.text || '');
+      const score = puntuarExtraccion(datos);
+      const validos = Object.values(datos).filter(r => r.valido).length;
+
+      textoLog += `--- ORIENTACIÓN ${ang}° (Puntaje: ${score}, Campos: ${validos}/6) ---\n${p.data.text}\n`;
+
+      if (score > mejorScore) {
+        mejorScore = score;
+        mejorDatos = datos;
+        mejorCanvas = canvasEvaluar;
+        mejorAngulo = ang;
+      }
+
+      // Si encontramos una lectura sólida (>= 4 campos válidos y score >= 95), detener búsqueda
+      if (validos >= 4 && score >= 95) {
+        if (ang !== 0) {
+          log(`✅ Orientación óptima detectada automáticamente a ${ang}°`, 'success');
+        }
+        break;
+      }
+    }
+
+    // Si aún faltan campos en la mejor orientación, hacer pasada secundaria en Grises Calibrados
+    const validosMejor = Object.values(mejorDatos).filter(r => r.valido).length;
+    if (validosMejor < 5) {
+      log(`📖 Pasada de respaldo en Grises Calibrados (${mejorAngulo}°)...`, 'info');
+      const cedulaOptima = mejorAngulo === 0 ? cedulaBase : autoEnderezarInclinacion(rotarCanvasGrados(cedulaBase, mejorAngulo));
+      const variantesOpt = generarVariantesPreprocesamiento(cedulaOptima, modoPreproc, usarPincel ? maskParaUsar : null);
+      if (variantesOpt.length > 1) {
+        const p2 = await worker.recognize(variantesOpt[1].canvas);
+        const datos2 = extraerDatosCedulaVenezuela(p2.data.text || '');
+        mejorDatos = fusionarResultados(mejorDatos, datos2);
+        textoLog += `--- RESPALDO GRISES (${mejorAngulo}°) ---\n${p2.data.text}\n`;
+      }
+    }
+
+    if (mejorCanvas) {
+      $('cedulaProcessedPreview').innerHTML = '';
+      $('cedulaProcessedPreview').appendChild(mejorCanvas);
+    }
+
+    const resultadosFinales = mejorDatos;
     $('rawTextArea').value = textoLog;
     $('btnToggleRaw').style.display = 'inline-flex';
 
