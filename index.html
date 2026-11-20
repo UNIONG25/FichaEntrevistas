@@ -82,6 +82,16 @@ h3{color:var(--primary-dark);margin:16px 0 10px;font-size:1.02em}
 .brush-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:.85em;font-weight:600;color:#334155}
 .brush-controls input[type="range"]{accent-color:var(--primary);cursor:pointer}
 
+/* Modal Pantalla Completa para Pincel en Móvil */
+.fs-brush-modal{position:fixed;inset:0;background:#0f172a;z-index:10000;display:none;flex-direction:column}
+.fs-brush-modal.active{display:flex}
+.fs-brush-header{background:#1e293b;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-bottom:1px solid #334155}
+.fs-brush-body{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px;position:relative;touch-action:none}
+.fs-brush-stack{position:relative;display:inline-flex;align-items:center;justify-content:center;max-width:100%;max-height:100%}
+.fs-brush-stack canvas{max-width:100%;max-height:calc(100vh - 115px);width:auto;height:auto;display:block}
+#fsBrushOverlay{position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;touch-action:none}
+.fs-brush-footer{background:#1e293b;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-top:1px solid #334155}
+
 .quality-panel{background:var(--light);border-radius:10px;padding:14px;margin:15px 0;border-left:4px solid var(--primary)}
 .quality-panel h4{margin-bottom:10px;color:var(--primary-dark);font-size:.92em}
 .quality-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
@@ -152,6 +162,29 @@ h3{color:var(--primary-dark);margin:16px 0 10px;font-size:1.02em}
   </div>
 </div>
 
+<!-- Modal Pantalla Completa para pintar cómodamente en móvil/PC -->
+<div class="fs-brush-modal" id="fsBrushModal">
+  <div class="fs-brush-header">
+    <span style="font-weight:700;font-size:.95em">🖌️ Selecciona los datos con el dedo o mouse</span>
+    <div style="display:flex;align-items:center;gap:10px;font-size:.85em">
+      <label style="display:flex;align-items:center;gap:5px">
+        Grosor: <input type="range" id="fsBrushSize" min="15" max="100" value="48">
+        <span id="fsBrushSizeVal">48px</span>
+      </label>
+    </div>
+  </div>
+  <div class="fs-brush-body">
+    <div class="fs-brush-stack" id="fsBrushStack"></div>
+  </div>
+  <div class="fs-brush-footer">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" id="fsBtnDeshacer" style="padding:8px 12px">↩️ Deshacer</button>
+      <button class="btn btn-danger" id="fsBtnLimpiar" style="padding:8px 12px">🧹 Limpiar</button>
+    </div>
+    <button class="btn btn-success" id="fsBtnListo" style="padding:8px 18px">✅ Listo y Aplicar</button>
+  </div>
+</div>
+
 <div class="container">
   <header>
     <h1>📋 Ficha de Entrevista - OCR PRO Cédula Venezuela <span class="pro-badge">v12.0 PINCEL INTERACTIVO</span></h1>
@@ -203,8 +236,8 @@ h3{color:var(--primary-dark);margin:16px 0 10px;font-size:1.02em}
           Grosor: <input type="range" id="brushSize" min="15" max="90" value="42">
           <span id="brushSizeVal">42px</span>
         </label>
-      </div>
-      <div style="display:flex;gap:6px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="btnPantallaCompletaPincel" style="padding:6px 12px;font-size:.8em;background:#0284c7">⛶ Pantalla Completa (Móvil)</button>
         <button class="btn btn-secondary" id="btnDeshacerTrazo" style="padding:6px 12px;font-size:.8em">↩️ Deshacer</button>
         <button class="btn btn-danger" id="btnLimpiarPincel" style="padding:6px 12px;font-size:.8em">🧹 Borrar Pintura</button>
       </div>
@@ -765,6 +798,132 @@ function configurarEventosPincel(canvas) {
   canvas.addEventListener('touchend', finalizarTrazo);
 }
 
+// ==================== PINCEL EN PANTALLA COMPLETA (MÓVIL / HORIZONTAL) ====================
+$('btnPantallaCompletaPincel').onclick = () => {
+  const base = $('cedulaBaseCanvas');
+  const overlay = $('brushOverlay');
+  if (!base || !overlay) return;
+
+  const stack = $('fsBrushStack');
+  stack.innerHTML = '';
+
+  const fsBase = document.createElement('canvas');
+  fsBase.width = base.width;
+  fsBase.height = base.height;
+  fsBase.getContext('2d').drawImage(base, 0, 0);
+
+  const fsOverlay = document.createElement('canvas');
+  fsOverlay.id = 'fsBrushOverlay';
+  fsOverlay.width = overlay.width;
+  fsOverlay.height = overlay.height;
+  fsOverlay.getContext('2d').drawImage(overlay, 0, 0);
+
+  stack.appendChild(fsBase);
+  stack.appendChild(fsOverlay);
+
+  $('fsBrushSize').value = $('brushSize').value;
+  $('fsBrushSizeVal').textContent = $('brushSize').value + 'px';
+
+  configurarEventosPincelFS(fsOverlay);
+  $('fsBrushModal').classList.add('active');
+};
+
+$('fsBrushSize').oninput = e => {
+  $('fsBrushSizeVal').textContent = e.target.value + 'px';
+  $('brushSize').value = e.target.value;
+  $('brushSizeVal').textContent = e.target.value + 'px';
+};
+
+function configurarEventosPincelFS(fsCanvas) {
+  const ctx = fsCanvas.getContext('2d');
+  let dibujando = false;
+  let lastPt = null;
+
+  function coords(e) {
+    const rect = fsCanvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - rect.left) * (fsCanvas.width / rect.width),
+      y: (clientY - rect.top) * (fsCanvas.height / rect.height)
+    };
+  }
+
+  function start(e) {
+    if (e.cancelable) e.preventDefault();
+    dibujando = true;
+    STATE.brushHistory.push(ctx.getImageData(0, 0, fsCanvas.width, fsCanvas.height));
+    if (STATE.brushHistory.length > 15) STATE.brushHistory.shift();
+    lastPt = coords(e);
+    draw(lastPt, lastPt);
+  }
+
+  function move(e) {
+    if (!dibujando) return;
+    if (e.cancelable) e.preventDefault();
+    const pt = coords(e);
+    draw(lastPt, pt);
+    lastPt = pt;
+  }
+
+  function end() {
+    if (!dibujando) return;
+    dibujando = false;
+    lastPt = null;
+    STATE.hasBrushStrokes = true;
+  }
+
+  function draw(p1, p2) {
+    const rect = fsCanvas.getBoundingClientRect();
+    const factor = fsCanvas.width / (rect.width || fsCanvas.width);
+    const grosor = parseInt($('fsBrushSize').value, 10) * factor;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = grosor;
+    ctx.strokeStyle = 'rgba(250, 204, 21, 0.48)';
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  fsCanvas.addEventListener('mousedown', start);
+  fsCanvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  fsCanvas.addEventListener('touchstart', start, { passive: false });
+  fsCanvas.addEventListener('touchmove', move, { passive: false });
+  fsCanvas.addEventListener('touchend', end);
+}
+
+$('fsBtnDeshacer').onclick = () => {
+  const fsOverlay = $('fsBrushOverlay');
+  if (!fsOverlay || STATE.brushHistory.length === 0) return;
+  fsOverlay.getContext('2d').putImageData(STATE.brushHistory.pop(), 0, 0);
+  STATE.hasBrushStrokes = STATE.brushHistory.length > 0;
+};
+
+$('fsBtnLimpiar').onclick = () => {
+  const fsOverlay = $('fsBrushOverlay');
+  if (!fsOverlay) return;
+  fsOverlay.getContext('2d').clearRect(0, 0, fsOverlay.width, fsOverlay.height);
+  STATE.brushHistory = [];
+  STATE.hasBrushStrokes = false;
+};
+
+$('fsBtnListo').onclick = () => {
+  const fsOverlay = $('fsBrushOverlay');
+  const overlay = $('brushOverlay');
+  if (fsOverlay && overlay) {
+    const ctx = overlay.getContext('2d');
+    ctx.clearRect(0, 0, overlay.width, overlay.height);
+    ctx.drawImage(fsOverlay, 0, 0);
+    actualizarVistaPreviaPincel();
+  }
+  $('fsBrushModal').classList.remove('active');
+};
+
 $('btnDeshacerTrazo').onclick = () => {
   const overlay = $('brushOverlay');
   if (!overlay || STATE.brushHistory.length === 0) return;
@@ -1081,36 +1240,43 @@ function extraerDatosCedulaVenezuela(textoCrudo) {
     nacionalidad: { texto: '', confianza: 0, valido: false, metodo: 'no-encontrada' }
   };
 
-  // 1. NÚMERO DE CÉDULA (Con corrección de caracteres confundidos como O->0, I->1)
-  for (const linea of lineas) {
-    const lUpper = linea.toUpperCase();
-    // Buscar patrón V 12.345.678 o V-12345678
-    const mPrefijo = lUpper.match(/\b([VE])\s*[-.:]?\s*([0-9OILSBG.,\s]{6,13})\b/);
-    if (mPrefijo) {
-      const letra = mPrefijo[1];
-      const soloDigitos = corregirDigitosOCR(mPrefijo[2]).replace(/\D/g, '');
-      if (soloDigitos.length >= 6 && soloDigitos.length <= 9) {
-        res.numero = { texto: `${letra}-${soloDigitos}`, confianza: 97, valido: true, metodo: 'prefijo+dígitos' };
+  // 1. NÚMERO DE CÉDULA (Priorizar formato exacto con puntos XX.XXX.XXX o prefijo V/E)
+  // Primero: buscar patrón con puntos de miles (ej. 18.456.789 o V 18.456.789) que es inequívoco en cédulas venezolanas
+  const mPuntosGlobal = textoUpper.match(/(?:\b([VE])\s*[-.:]?\s*)?\b([0-9OILSBG]{1,2}\.[0-9OILSBG]{3}\.[0-9OILSBG]{3})\b/);
+  if (mPuntosGlobal) {
+    const letra = mPuntosGlobal[1] || (/\bE\b/.test(textoUpper) && !/\bV\b/.test(textoUpper) ? 'E' : 'V');
+    const digitos = corregirDigitosOCR(mPuntosGlobal[2]).replace(/\D/g, '');
+    if (digitos.length >= 7 && digitos.length <= 8) {
+      res.numero = { texto: `${letra}-${digitos}`, confianza: 98, valido: true, metodo: 'formato-miles' };
+    }
+  }
+
+  // Segundo: buscar línea con prefijo explícito V- o E- (ignorando fechas con / o -)
+  if (!res.numero.valido) {
+    for (const linea of lineas) {
+      if (/\d{1,2}\/\d{1,2}\/\d{2,4}/.test(linea)) continue; // Saltar líneas que son fechas
+      const lUpper = linea.toUpperCase();
+      const mPrefijo = lUpper.match(/(?:^|\s)([VE])\s*[-.:]?\s*([0-9OILSBG.\s]{7,12})(?:\s|$)/);
+      if (mPrefijo) {
+        const letra = mPrefijo[1];
+        const soloDigitos = corregirDigitosOCR(mPrefijo[2]).replace(/\D/g, '');
+        if (soloDigitos.length >= 6 && soloDigitos.length <= 9) {
+          res.numero = { texto: `${letra}-${soloDigitos}`, confianza: 94, valido: true, metodo: 'prefijo+dígitos' };
+          break;
+        }
+      }
+    }
+  }
+
+  // Tercero: secuencia numérica limpia de 7 u 8 dígitos (evitando años como 19952026)
+  if (!res.numero.valido) {
+    const matchesNum = textoUpper.match(/\b\d{7,8}\b/g) || [];
+    for (const num of matchesNum) {
+      const nInt = parseInt(num, 10);
+      if (nInt >= 1000000 && nInt <= 45000000) {
+        res.numero = { texto: `V-${num}`, confianza: 82, valido: true, metodo: 'numérico' };
         break;
       }
-    }
-  }
-
-  if (!res.numero.valido) {
-    // Fallback: secuencia con puntos de miles (ej. 18.456.789 o 8.456.789)
-    const mPuntos = textoUpper.match(/\b([0-9OILSBG]{1,2}\.[0-9OILSBG]{3}\.[0-9OILSBG]{3})\b/);
-    if (mPuntos) {
-      const digitos = corregirDigitosOCR(mPuntos[1]).replace(/\D/g, '');
-      if (digitos.length >= 7 && digitos.length <= 8) {
-        res.numero = { texto: `V-${digitos}`, confianza: 86, valido: true, metodo: 'formato-puntos' };
-      }
-    }
-  }
-
-  if (!res.numero.valido) {
-    const soloNum = textoUpper.match(/\b(\d{7,8})\b/);
-    if (soloNum) {
-      res.numero = { texto: `V-${soloNum[1]}`, confianza: 72, valido: true, metodo: 'numérico' };
     }
   }
 
@@ -1125,7 +1291,7 @@ function extraerDatosCedulaVenezuela(textoCrudo) {
     res.nacionalidad = { texto: 'Extranjera', confianza: 88, valido: true, metodo: 'inferida-CI' };
   }
 
-  // 3. ANÁLISIS LÍNEA POR LÍNEA PARA APELLIDOS Y NOMBRES
+  // 3. ANÁLISIS ESTRUCTURAL PARA APELLIDOS Y NOMBRES (Evita saltar el bloque de Apellidos)
   let idxLineaApellidos = -1;
   let idxLineaNombres = -1;
 
@@ -1133,53 +1299,82 @@ function extraerDatosCedulaVenezuela(textoCrudo) {
     const linea = lineas[i];
     const lineaU = linea.toUpperCase();
 
-    // Etiqueta APELLIDOS (tolerante a APELL1DOS, APELLID0S, APELLIOOS)
-    if (!res.apellidos.valido && /APELL[I1L][DO0S]{2,4}/.test(lineaU)) {
+    // Detectar etiqueta APELLIDOS (o variaciones OCR como APELL1DOS, APELLID0S, PELLIDOS)
+    if (!res.apellidos.valido && /A?PELL[I1L][DO0S]{2,4}/.test(lineaU)) {
       idxLineaApellidos = i;
-      let resto = linea.replace(/.*APELL[I1L][DO0S]{2,4}[:\s.-]*/i, '').trim();
+      let resto = linea.replace(/.*A?PELL[I1L][DO0S]{2,4}[:\s.-]*/i, '').trim();
+      // Si en la misma línea se coló la palabra NOMBRES, cortar antes de NOMBRES
+      resto = resto.split(/N[O0Q]MBR[E3]S?/i)[0].trim();
       let candidato = limpiarNombrePropio(resto);
+
+      // Si el valor está en la línea siguiente (muy común en cédulas SAIME)
       if (candidato.length < 3 && i + 1 < lineas.length) {
-        candidato = limpiarNombrePropio(lineas[i + 1]);
+        const sigLinea = lineas[i + 1];
+        if (!/N[O0Q]MBR[E3]S?/i.test(sigLinea)) {
+          candidato = limpiarNombrePropio(sigLinea);
+          if (candidato.length >= 3) idxLineaApellidos = i + 1;
+        }
       }
       if (candidato.length >= 3) {
-        res.apellidos = { texto: candidato, confianza: 90, valido: true, metodo: 'etiqueta-línea' };
+        res.apellidos = { texto: candidato, confianza: 92, valido: true, metodo: 'etiqueta-línea' };
       }
     }
 
-    // Etiqueta NOMBRES (tolerante a N0MBRES, NOMBR3S, NQMBRES)
-    if (!res.nombres.valido && /N[O0Q]MBR[E3]S?/.test(lineaU)) {
+    // Detectar etiqueta NOMBRES (o variaciones OCR como N0MBRES, NOMBR3S, OMBRES)
+    if (!res.nombres.valido && /N?[O0Q]MBR[E3]S?/.test(lineaU)) {
       idxLineaNombres = i;
-      let resto = linea.replace(/.*N[O0Q]MBR[E3]S?[:\s.-]*/i, '').trim();
+      let resto = linea.replace(/.*N?[O0Q]MBR[E3]S?[:\s.-]*/i, '').trim();
       let candidato = limpiarNombrePropio(resto);
+
       if (candidato.length < 3 && i + 1 < lineas.length) {
-        candidato = limpiarNombrePropio(lineas[i + 1]);
+        const sigLinea = lineas[i + 1];
+        if (!/F\.?\s*NAC|FECHA|EDO|ESTADO/i.test(sigLinea)) {
+          candidato = limpiarNombrePropio(sigLinea);
+          if (candidato.length >= 3) idxLineaNombres = i + 1;
+        }
       }
       if (candidato.length >= 3) {
-        res.nombres = { texto: candidato, confianza: 90, valido: true, metodo: 'etiqueta-línea' };
+        res.nombres = { texto: candidato, confianza: 92, valido: true, metodo: 'etiqueta-línea' };
       }
     }
   }
 
-  // Fallback posicional: si no leyó las etiquetas "APELLIDOS"/"NOMBRES" por desgaste del plástico,
-  // buscar las dos líneas consecutivas de texto puramente alfabético (en mayúsculas)
+  // Fallback posicional ordenado: recopilar TODAS las líneas de texto limpio (nombres/apellidos) en orden de aparición
   if (!res.apellidos.valido || !res.nombres.valido) {
-    const candidatosTexto = [];
+    const bloquesTexto = [];
     for (let i = 0; i < lineas.length; i++) {
-      if (i === idxLineaApellidos || i === idxLineaNombres) continue;
       const l = lineas[i];
-      // Ignorar líneas con muchos números (fechas, cédula)
-      const digitos = (l.match(/\d/g) || []).length;
-      if (digitos > 1) continue;
+      // Ignorar líneas que son fechas o números de cédula
+      if (/\d{2}\/\d{2}\/\d{4}/.test(l)) continue;
+      if ((l.match(/\d/g) || []).length >= 3) continue;
+      // Ignorar líneas de estado civil o nacionalidad pura
+      if (/^\s*(SOLTER[AO]|CASAD[AO]|DIVORCIAD[AO]|VIUD[AO]|CONCUBIN[AO]|VENEZOLAN[AO]|EXTRANJER[AO])\s*$/i.test(l)) continue;
+
       const limpio = limpiarNombrePropio(l);
-      if (limpio.length >= 4 && limpio.split(' ').length <= 4) {
-        candidatosTexto.push(limpio);
+      if (limpio.length >= 3 && limpio.split(' ').length <= 4) {
+        bloquesTexto.push({ texto: limpio, idx: i });
       }
     }
-    if (!res.apellidos.valido && candidatosTexto.length >= 1) {
-      res.apellidos = { texto: candidatosTexto[0], confianza: 74, valido: true, metodo: 'posicional' };
-    }
-    if (!res.nombres.valido && candidatosTexto.length >= 2) {
-      res.nombres = { texto: candidatosTexto[1], confianza: 74, valido: true, metodo: 'posicional' };
+
+    if (!res.apellidos.valido && !res.nombres.valido) {
+      if (bloquesTexto.length >= 1) {
+        res.apellidos = { texto: bloquesTexto[0].texto, confianza: 78, valido: true, metodo: 'orden-1ro' };
+      }
+      if (bloquesTexto.length >= 2) {
+        res.nombres = { texto: bloquesTexto[1].texto, confianza: 78, valido: true, metodo: 'orden-2do' };
+      }
+    } else if (!res.apellidos.valido && res.nombres.valido) {
+      // Si se detectó Nombres pero se saltó Apellidos, buscar el bloque de texto inmediatamente ANTERIOR a Nombres
+      const anterior = bloquesTexto.find(b => b.idx < idxLineaNombres && b.texto !== res.nombres.texto);
+      if (anterior) {
+        res.apellidos = { texto: anterior.texto, confianza: 82, valido: true, metodo: 'previo-a-nombres' };
+      }
+    } else if (res.apellidos.valido && !res.nombres.valido) {
+      // Si se detectó Apellidos pero faltó Nombres, buscar el bloque inmediatamente POSTERIOR a Apellidos
+      const posterior = bloquesTexto.find(b => b.idx > idxLineaApellidos && b.texto !== res.apellidos.texto);
+      if (posterior) {
+        res.nombres = { texto: posterior.texto, confianza: 82, valido: true, metodo: 'posterior-a-apellidos' };
+      }
     }
   }
 
