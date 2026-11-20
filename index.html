@@ -3,116 +3,160 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ficha de Entrevista 2027</title>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<title>Ficha de Entrevista - OCR PRO v10.0 | Antonio Altuna 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
+<script src="https://docs.opencv.org/4.8.0/opencv.js" async></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-  :root {
-    --primary: #1e3a8a; --primary-light: #3b82f6; --success: #059669;
-    --danger: #dc2626; --warning: #d97706; --dark: #1f2937; --light: #f3f4f6;
-    --border: #d1d5db; --text: #374151; --bg: #f9fafb;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-  body { background: var(--bg); color: var(--text); padding: 15px; line-height: 1.5; }
-  .container { max-width: 1400px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; }
-  
-  header { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff; padding: 25px; text-align: center; }
-  header h1 { font-size: 1.8em; margin-bottom: 8px; }
-  header p { font-size: 0.95em; opacity: 0.95; }
-  .header-info { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 10px; font-size: 0.85em; }
-  .header-info span { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 15px; }
+:root{
+  --primary:#1a5490;
+  --primary-dark:#0d3a6e;
+  --success:#198754;
+  --warning:#f59e0b;
+  --danger:#dc2626;
+  --light:#f8fafc;
+  --border:#cbd5e1;
+  --text:#1e293b;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+body{background:linear-gradient(135deg,#e2e8f0 0%,#f8fafc 100%);min-height:100vh;padding:20px;color:var(--text)}
+.container{max-width:1150px;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 12px 35px rgba(15,23,42,.08);overflow:hidden;border:1px solid #e2e8f0}
+header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:24px;text-align:center}
+header h1{font-size:1.55em;margin-bottom:6px;letter-spacing:-0.3px}
+header p{opacity:.9;font-size:.9em}
+.contact{display:flex;justify-content:center;gap:18px;margin-top:12px;flex-wrap:wrap;font-size:.82em;opacity:.95}
+.pro-badge{display:inline-block;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#0f172a;padding:2px 10px;border-radius:99px;font-size:.72em;font-weight:800;margin-left:6px;vertical-align:middle}
+section{padding:24px;border-bottom:1px solid #e2e8f0}
+h2{color:var(--primary);margin-bottom:14px;font-size:1.25em;display:flex;align-items:center;gap:8px}
+h3{color:var(--primary-dark);margin:16px 0 10px;font-size:1.02em}
+.btn{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:.88em;transition:all .18s;display:inline-flex;align-items:center;gap:6px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--primary-dark)}
+.btn-success{background:var(--success);color:#fff}
+.btn-success:hover:not(:disabled){background:#157347}
+.btn-warning{background:var(--warning);color:#000}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover:not(:disabled){background:#b91c1c}
+.btn-secondary{background:#64748b;color:#fff}
+.btn-secondary:hover:not(:disabled){background:#475569}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
 
-  .content { padding: 25px; }
-  .dual-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
-  @media (max-width: 900px) { .dual-panel { grid-template-columns: 1fr; } }
-  
-  .panel { background: var(--light); border: 2px solid var(--border); border-radius: 10px; padding: 20px; }
-  .panel h3 { color: var(--primary); margin-bottom: 15px; border-bottom: 3px solid var(--primary-light); padding-bottom: 8px; font-size: 1.1em; }
-  
-  .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9em; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; color: #fff; margin: 3px; }
-  .btn-primary { background: var(--primary-light); } .btn-primary:hover { background: var(--primary); }
-  .btn-success { background: var(--success); } .btn-success:hover { background: #047857; }
-  .btn-warning { background: var(--warning); } .btn-warning:hover { background: #b45309; }
-  .btn-danger { background: var(--danger); } .btn-danger:hover { background: #b91c1c; }
-  .btn-secondary { background: #6b7280; } .btn-secondary:hover { background: #4b5563; }
-  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  
-  .image-area { background: #fff; border: 2px dashed var(--border); border-radius: 8px; min-height: 280px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; margin-bottom: 12px; }
-  .image-area img, .image-area video { max-width: 100%; max-height: 380px; border-radius: 6px; }
-  .placeholder { text-align: center; color: #9ca3af; padding: 20px; }
-  .placeholder span { font-size: 3em; display: block; margin-bottom: 10px; }
-  
-  .crop-container { position: relative; display: inline-block; max-width: 100%; margin: 10px auto; }
-  .crop-container img { display: block; max-width: 100%; border: 1px solid var(--border); }
-  .crop-handle { position: absolute; width: 28px; height: 28px; background: var(--success); border: 3px solid #fff; border-radius: 50%; cursor: move; box-shadow: 0 2px 8px rgba(0,0,0,0.4); transform: translate(-50%, -50%); z-index: 10; }
-  .crop-handle::after { content: '+'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-weight: bold; font-size: 18px; }
-  .crop-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
-  
-  .form-section { background: #fff; border: 2px solid var(--border); border-radius: 10px; padding: 25px; margin-bottom: 20px; }
-  .form-section h3 { color: var(--primary); margin-bottom: 15px; border-bottom: 3px solid var(--success); padding-bottom: 8px; }
-  .form-section h4 { color: var(--dark); margin: 18px 0 12px; font-size: 1.05em; padding-left: 10px; border-left: 4px solid var(--primary-light); }
-  
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
-  .form-group { display: flex; flex-direction: column; }
-  .form-group.full { grid-column: 1 / -1; }
-  .form-group label { font-weight: 600; margin-bottom: 5px; color: var(--dark); font-size: 0.9em; }
-  .form-group input, .form-group select, .form-group textarea {
-    padding: 10px; border: 2px solid var(--border); border-radius: 6px; font-size: 0.95em;
-    transition: border 0.2s; background: #fff;
-  }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-  }
-  .form-group textarea { resize: vertical; min-height: 70px; }
-  .form-group input.auto-filled { background: #ecfdf5; border-color: var(--success); }
-  
-  .ocr-status { background: var(--light); padding: 12px; border-radius: 8px; margin: 12px 0; font-size: 0.9em; }
-  .progress-bar { height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; margin-top: 8px; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--success), #10b981); width: 0%; transition: width 0.3s; }
-  
-  .ocr-textarea { width: 100%; min-height: 120px; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.85em; margin-top: 10px; }
-  
-  .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--border); }
-  .actions .btn { padding: 12px 24px; font-size: 1em; }
-  
-  .saved-list { margin-top: 25px; background: var(--light); padding: 20px; border-radius: 10px; }
-  .saved-list h3 { margin-bottom: 15px; color: var(--primary); }
-  .employee-card { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; border-left: 4px solid var(--primary-light); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-  .employee-card img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: var(--border); }
-  .employee-info { flex: 1; }
-  .employee-info strong { color: var(--dark); font-size: 1.05em; }
-  .employee-info small { color: #6b7280; display: block; margin-top: 4px; }
-  .emp-code { background: var(--primary); color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 0.8em; font-family: monospace; }
-  
-  .hidden { display: none !important; }
-  
-  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
-  .modal.active { display: flex; }
-  .modal-content { background: #fff; width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; border-radius: 12px; padding: 30px; position: relative; }
-  .modal-close { position: absolute; top: 15px; right: 15px; background: var(--danger); color: #fff; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 1.2em; }
-  
-  .roi-preview { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; }
-  .roi-box { border: 2px solid var(--primary); border-radius: 6px; padding: 10px; text-align: center; background: #fff; }
-  .roi-box img { max-width: 100%; height: 120px; object-fit: contain; border: 1px solid var(--border); background: #f9fafb; }
-  .roi-box label { font-size: 0.85em; font-weight: 600; color: var(--primary); margin-top: 5px; display: block; }
-  .roi-box .roi-text { font-size: 0.8em; color: var(--dark); margin-top: 5px; font-style: italic; min-height: 20px; word-break: break-word; }
-  
-  .crop-info { background: #dbeafe; border-left: 4px solid var(--primary-light); padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 0.9em; }
-  
-  @media print {
-    body * { visibility: hidden; }
-    .modal, .modal * { visibility: visible; }
-    .modal { position: absolute; left: 0; top: 0; background: #fff; }
-    .modal-close, .modal-actions { display: none !important; }
-  }
+/* Notificaciones Toast */
+#toastContainer{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:340px}
+.toast{padding:12px 16px;border-radius:8px;color:#fff;font-size:.88em;font-weight:500;box-shadow:0 8px 20px rgba(0,0,0,.15);animation:slideIn .25s ease-out;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.toast-info{background:#1e293b}
+.toast-success{background:var(--success)}
+.toast-warn{background:#d97706}
+.toast-error{background:var(--danger)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Modal Personalizado */
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:9998;padding:16px}
+.modal-backdrop.active{display:flex}
+.modal-card{background:#fff;border-radius:12px;max-width:500px;width:100%;padding:22px;box-shadow:0 20px 40px rgba(0,0,0,.2)}
+.modal-title{font-size:1.15em;font-weight:700;color:var(--primary-dark);margin-bottom:10px}
+.modal-body{font-size:.9em;color:#334155;margin-bottom:18px;max-height:60vh;overflow-y:auto;white-space:pre-wrap;line-height:1.45}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px}
+
+/* Fotos y Cédula */
+.foto-container{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start}
+.foto-preview{width:220px;height:275px;border:2px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--light);overflow:hidden}
+.foto-preview img,.foto-preview video{width:100%;height:100%;object-fit:cover}
+.foto-preview .placeholder{text-align:center;color:#94a3b8;font-size:.85em;padding:10px}
+.foto-controls{flex:1;min-width:250px}
+
+.cedula-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+@media(max-width:768px){.cedula-grid{grid-template-columns:1fr}}
+.cedula-box{display:flex;flex-direction:column;gap:6px}
+.cedula-box-label{font-size:.78em;font-weight:700;color:#64748b;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.cedula-preview{width:100%;height:320px;border:2px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;background:#0f172a;overflow:hidden;position:relative;touch-action:none}
+.cedula-preview img,.cedula-preview canvas{max-width:100%;max-height:100%;object-fit:contain}
+.cedula-preview .placeholder{text-align:center;color:#94a3b8;font-size:.9em}
+.brush-canvas-stack{position:relative;display:inline-flex;align-items:center;justify-content:center;max-width:100%;max-height:100%}
+.brush-canvas-stack canvas{display:block;max-width:100%;max-height:316px;width:auto;height:auto}
+#brushOverlay{position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;touch-action:none}
+.brush-toolbar{background:#f1f5f9;padding:10px 14px;border-radius:10px;border:1px solid #cbd5e1;margin-top:10px;display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.brush-toolbar.active{display:flex}
+.brush-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:.85em;font-weight:600;color:#334155}
+.brush-controls input[type="range"]{accent-color:var(--primary);cursor:pointer}
+
+.quality-panel{background:var(--light);border-radius:10px;padding:14px;margin:15px 0;border-left:4px solid var(--primary)}
+.quality-panel h4{margin-bottom:10px;color:var(--primary-dark);font-size:.92em}
+.quality-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.metric{background:#fff;padding:10px;border-radius:8px;border:1px solid #e2e8f0}
+.metric-label{font-size:.72em;color:#64748b;text-transform:uppercase;margin-bottom:3px;font-weight:600}
+.metric-value{font-size:1.05em;font-weight:700}
+.metric-bar{height:5px;background:#e2e8f0;border-radius:3px;margin-top:5px;overflow:hidden}
+.metric-fill{height:100%;transition:width .3s,background .3s}
+.quality-status{padding:9px;border-radius:8px;margin-top:10px;font-weight:600;text-align:center;font-size:.88em}
+.quality-ok{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.quality-bad{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.quality-warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+
+.ocr-zones{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:12px 0}
+.ocr-zone{background:var(--light);padding:10px;border-radius:8px;border:1px solid var(--border);transition:all .2s}
+.ocr-zone-label{font-size:.72em;color:#64748b;text-transform:uppercase;margin-bottom:4px;font-weight:700}
+.ocr-zone-value{font-size:.95em;font-weight:600;word-break:break-word;min-height:1.3em;color:#0f172a}
+.ocr-zone-conf{font-size:.7em;color:#64748b;margin-top:3px}
+.ocr-zone.confidence-high{border-color:var(--success);background:#f0fdf4}
+.ocr-zone.confidence-med{border-color:var(--warning);background:#fffbeb}
+.ocr-zone.confidence-low,.ocr-zone.invalid{border-color:var(--danger);background:#fef2f2}
+
+.ocr-progress{margin:15px 0;display:none}
+.ocr-progress.active{display:block}
+.progress-bar{height:22px;background:#e2e8f0;border-radius:11px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--success));transition:width .25s;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.78em;font-weight:700}
+.ocr-log{background:#0f172a;color:#38bdf8;padding:12px;border-radius:8px;font-family:'Consolas','Courier New',monospace;font-size:.78em;max-height:190px;overflow-y:auto;margin-top:10px;line-height:1.4}
+.ocr-log .log-info{color:#7dd3fc}
+.ocr-log .log-success{color:#4ade80}
+.ocr-log .log-warn{color:#fbbf24}
+.ocr-log .log-error{color:#f87171}
+
+.raw-text-box{margin-top:10px;display:none}
+.raw-text-box textarea{width:100%;height:110px;font-family:monospace;font-size:.8em;padding:8px;border-radius:6px;border:1px solid var(--border);background:#f8fafc;color:#334155}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.form-group{display:flex;flex-direction:column}
+.form-group label{font-size:.82em;font-weight:700;margin-bottom:5px;color:var(--primary-dark)}
+.form-group input,.form-group select,.form-group textarea{padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:.9em;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,84,144,.12)}
+.form-group input.field-high,.form-group select.field-high{border-color:var(--success);background:#f0fdf4}
+.form-group input.field-med,.form-group select.field-med{border-color:var(--warning);background:#fffbeb}
+.form-group input.field-low,.form-group select.field-low{border-color:var(--danger);background:#fef2f2}
+.form-group .field-hint{font-size:.72em;color:#64748b;margin-top:3px}
+.form-group .field-hint.hint-err{color:var(--danger);font-weight:600}
+
+.codigo-unico{background:linear-gradient(135deg,#eff6ff,#dbeafe);padding:12px;border-radius:10px;text-align:center;margin:10px 0;border:2px dashed var(--primary)}
+.codigo-unico strong{font-family:'Consolas',monospace;font-size:1.15em;color:var(--primary-dark);letter-spacing:1px}
+
+.fichas-lista{max-height:380px;overflow-y:auto}
+.ficha-item{background:var(--light);padding:12px 14px;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid var(--primary);border:1px solid #e2e8f0;border-left-width:4px}
+.ficha-item-info strong{color:var(--primary-dark)}
+.ficha-item-info small{display:block;color:#64748b;font-size:.8em;margin-top:3px}
+.acciones{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;padding-top:18px;border-top:1px solid #e2e8f0}
+.spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
+<div id="toastContainer"></div>
+
+<div class="modal-backdrop" id="customModal">
+  <div class="modal-card">
+    <div class="modal-title" id="modalTitle">Confirmación</div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
 <div class="container">
   <header>
-    <h1>📋 Ficha de Entrevista - OCR Profesional Cédula Venezuela v5.0</h1>
-    <p>Homografía real + ROIs recalibrados + Preprocesamiento avanzado | Códigos únicos globales</p>
-    <div class="header-info">
+    <h1>📋 Ficha de Entrevista - OCR PRO Cédula Venezuela <span class="pro-badge">v12.0 PINCEL INTERACTIVO</span></h1>
+    <p>Pinta/subraya con el mouse o dedo las zonas de texto + Extracción Multi-Pasada KYC</p>
+    <div class="contact">
       <span>👤 Antonio Altuna</span>
       <span>📅 2026</span>
       <span>📞 0412-7294298</span>
@@ -120,1055 +164,1516 @@
     </div>
   </header>
 
-  <div class="content">
-
-    <div class="dual-panel">
-
-      <div class="panel">
-        <h3>📸 Foto del Entrevistado (Tiempo Real)</h3>
+  <section>
+    <h2>📸 Paso 1: Foto del Entrevistado</h2>
+    <div class="foto-container">
+      <div class="foto-preview" id="fotoPreview"><div class="placeholder">👤<br>La foto aparecerá aquí</div></div>
+      <div class="foto-controls">
         <div class="btn-group">
-          <button class="btn btn-primary" onclick="openCamera('employee')">📷 Cámara en Vivo</button>
-          <button class="btn btn-secondary" onclick="document.getElementById('empPhotoInput').click()">📁 Subir Foto</button>
-          <button class="btn btn-danger hidden" id="btnClearEmp" onclick="clearImage('employee')">🗑️ Limpiar</button>
-          <input type="file" id="empPhotoInput" accept="image/*" capture="user" class="hidden" onchange="loadImage(event,'employee')">
+          <button class="btn btn-primary" id="btnCamara">📷 Cámara</button>
+          <button class="btn btn-secondary" id="btnSubirFoto">📁 Subir Foto</button>
+          <input type="file" id="inputFoto" accept="image/*" capture="user" style="display:none">
+          <button class="btn btn-danger" id="btnLimpiarFoto">🗑️ Limpiar</button>
         </div>
-        <div class="image-area" id="empImageArea">
-          <div class="placeholder"><span>👤</span><p>La foto del empleado aparecerá aquí</p></div>
-        </div>
-        <div id="empCameraBox" class="hidden">
-          <video id="empVideo" autoplay playsinline style="width:100%; border-radius:8px;"></video>
-          <div style="margin-top:10px; display:flex; gap:8px;">
-            <button class="btn btn-success" onclick="capturePhoto('employee')">📸 Capturar</button>
-            <button class="btn btn-danger" onclick="closeCamera('employee')">❌ Cancelar</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <h3>🪪 Cédula de Identidad Venezolana</h3>
-        <div class="btn-group">
-          <button class="btn btn-primary" onclick="openCamera('doc')">📷 Fotografiar Cédula</button>
-          <button class="btn btn-secondary" onclick="document.getElementById('docInput').click()">📁 Subir Imagen</button>
-          <input type="file" id="docInput" accept="image/*" capture="environment" class="hidden" onchange="loadImage(event,'doc')">
-        </div>
-        <div class="image-area" id="docImageArea">
-          <div class="placeholder"><span>🪪</span><p>Sube o fotografía la cédula</p></div>
-        </div>
-        <div id="cropTool" class="hidden">
-          <div class="crop-info">
-            ✂️ <b>Recorte Perspectivo REAL:</b> Arrastra los 4 círculos verdes a las esquinas de la cédula. El sistema aplicará una <b>transformación homográfica</b> para enderezar completamente el documento.
-          </div>
-          <div class="crop-container" id="cropContainer">
-            <img id="cropImage" src="">
-            <svg class="crop-svg" id="cropSvg"></svg>
-            <div class="crop-handle" id="h0" data-i="0"></div>
-            <div class="crop-handle" id="h1" data-i="1"></div>
-            <div class="crop-handle" id="h2" data-i="2"></div>
-            <div class="crop-handle" id="h3" data-i="3"></div>
-          </div>
-          <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
-            <button class="btn btn-success" onclick="applyCrop()">✔ Aplicar Recorte Perspectivo</button>
-            <button class="btn btn-secondary" onclick="cancelCrop()">✖ Cancelar</button>
-            <button class="btn btn-warning" onclick="resetCrop()">↺ Restaurar Esquinas</button>
+        <div id="camaraBox" style="display:none;margin-top:10px">
+          <video id="video" autoplay playsinline style="width:100%;border-radius:8px"></video>
+          <div class="btn-group" style="margin-top:8px">
+            <button class="btn btn-success" id="btnCapturar">📸 Capturar</button>
+            <button class="btn btn-secondary" id="btnCancelarCam">❌ Cancelar</button>
           </div>
         </div>
       </div>
     </div>
+  </section>
 
-    <div class="form-section">
-      <h3>⚡ Paso 2: OCR Profesional con Segmentación por Regiones</h3>
-      <p style="color:#6b7280; font-size:0.9em; margin-bottom:12px;">
-        ROIs recalibrados basados en la estructura real de la cédula venezolana. Preprocesamiento avanzado con umbral adaptativo local.
-      </p>
-      <div class="btn-group">
-        <button class="btn btn-warning" onclick="runProfessionalOCR()">🔍 PROCESAR CON OCR PROFESIONAL</button>
-        <select id="ocrLang" style="padding:10px; border-radius:6px; border:2px solid var(--border);">
-          <option value="spa">Español</option>
-          <option value="spa+eng">Español + Inglés</option>
-        </select>
-      </div>
-      <div class="ocr-status">
-        <div>Estado: <span id="ocrStatus">Esperando cédula...</span></div>
-        <div class="progress-bar"><div class="progress-fill" id="ocrProgress"></div></div>
-      </div>
-      
-      <div id="roiPreview" class="roi-preview hidden">
-        <div class="roi-box">
-          <img id="roi-cedula" src="" alt="Zona cédula">
-          <label>Zona: Número Cédula</label>
-          <div class="roi-text" id="roi-cedula-text">-</div>
-        </div>
-        <div class="roi-box">
-          <img id="roi-apellidos" src="" alt="Zona apellidos">
-          <label>Zona: Apellidos</label>
-          <div class="roi-text" id="roi-apellidos-text">-</div>
-        </div>
-        <div class="roi-box">
-          <img id="roi-nombres" src="" alt="Zona nombres">
-          <label>Zona: Nombres</label>
-          <div class="roi-text" id="roi-nombres-text">-</div>
-        </div>
-        <div class="roi-box">
-          <img id="roi-fechas" src="" alt="Zona fechas">
-          <label>Zona: Fechas</label>
-          <div class="roi-text" id="roi-fechas-text">-</div>
-        </div>
-        <div class="roi-box">
-          <img id="roi-estado" src="" alt="Zona estado">
-          <label>Zona: Estado Civil</label>
-          <div class="roi-text" id="roi-estado-text">-</div>
-        </div>
-      </div>
-      
-      <textarea class="ocr-textarea" id="ocrRawText" placeholder="Texto OCR completo aparecerá aquí..."></textarea>
-      <button class="btn btn-secondary" style="margin-top:8px;" onclick="reparseOCR()">🔄 Re-analizar Ficha desde Texto Editado</button>
+  <section>
+    <h2>🪪 Paso 2: Cédula Venezolana <span class="pro-badge">OCR + PINCEL</span></h2>
+    <div class="btn-group">
+      <button class="btn btn-primary" id="btnFotoCedula">📷 Fotografiar Cédula</button>
+      <button class="btn btn-secondary" id="btnSubirCedula">📁 Subir Imagen</button>
+      <button class="btn btn-warning" id="btnRotarCedula" disabled>🔄 Rotar 90°</button>
+      <button class="btn btn-primary" id="btnTogglePincel" disabled style="background:#7c3aed">🖌️ Pincel de Selección: OFF</button>
+      <input type="file" id="inputCedula" accept="image/*" capture="environment" style="display:none">
     </div>
 
-    <div class="form-section">
-      <h3>📝 Paso 3: Ficha de Entrevista del Empleado</h3>
-      
-      <div style="background:#fef3c7; padding:12px; border-radius:8px; margin-bottom:15px; border-left:4px solid var(--warning);">
-        <strong>🆔 Código Único de Ficha:</strong> 
-        <code id="fichaCode" style="font-size:1.1em; color:var(--primary); font-weight:bold;">-</code>
-        <button class="btn btn-secondary" style="margin-left:10px; padding:6px 12px; font-size:0.85em;" onclick="generateNewCode()">🔄 Generar Nuevo</button>
+    <div class="brush-toolbar" id="brushToolbar">
+      <div class="brush-controls">
+        <span>🖌️ Pinta sobre los datos (Número, Apellidos, Nombres, Fecha, Estado Civil):</span>
+        <label style="display:flex;align-items:center;gap:6px">
+          Grosor: <input type="range" id="brushSize" min="15" max="90" value="42">
+          <span id="brushSizeVal">42px</span>
+        </label>
       </div>
-
-      <h4>🤖 Datos Extraídos Automáticamente (de la Cédula)</h4>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>N° Cédula de Identidad:</label>
-          <input type="text" id="f_cedula" placeholder="V-12345678" class="auto-filled">
-        </div>
-        <div class="form-group">
-          <label>Apellidos:</label>
-          <input type="text" id="f_apellidos" placeholder="Apellidos completos" class="auto-filled">
-        </div>
-        <div class="form-group">
-          <label>Nombres:</label>
-          <input type="text" id="f_nombres" placeholder="Nombres completos" class="auto-filled">
-        </div>
-        <div class="form-group">
-          <label>Fecha de Nacimiento:</label>
-          <input type="date" id="f_nacimiento" class="auto-filled">
-        </div>
-        <div class="form-group">
-          <label>Estado Civil:</label>
-          <select id="f_estadoCivil" class="auto-filled">
-            <option value="">-- Seleccionar --</option>
-            <option>Soltero(a)</option>
-            <option>Casado(a)</option>
-            <option>Divorciado(a)</option>
-            <option>Viudo(a)</option>
-            <option>Concubino(a)</option>
-            <option>Residente</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Nacionalidad:</label>
-          <input type="text" id="f_nacionalidad" value="Venezolana" class="auto-filled">
-        </div>
-      </div>
-
-      <h4>✍️ Datos de la Entrevista (Llenado Manual)</h4>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Negocio / Empresa:</label>
-          <select id="f_negocio" onchange="toggleOtroNegocio()">
-            <option value="">-- Seleccionar --</option>
-            <option>Comercializadora La Union 2018 CA (U18)</option>
-            <option>Comercializadora La Union 2020 CA (U20)</option>
-            <option>Comercial Fortuna 27 CA (Fortuna)</option>
-            <option>Confiteria Maikol Ganga C.A (CMG)</option>
-            <option>Inversiones Lider Market 168 C.A (ILM)</option>
-            <option>CSO</option>
-            <option>SSO</option>
-            <option>RLM</option>
-            <option value="OTRO">Otro (especificar)</option>
-          </select>
-          <input type="text" id="f_negocioOtro" placeholder="Especificar otro negocio" class="hidden" style="margin-top:5px;">
-        </div>
-        <div class="form-group">
-          <label>Fecha de Entrevista:</label>
-          <input type="date" id="f_fechaEntrevista">
-        </div>
-        <div class="form-group">
-          <label>Teléfono de Contacto:</label>
-          <input type="tel" id="f_telefono" placeholder="0412-1234567">
-        </div>
-        <div class="form-group">
-          <label>Cumple Requisito de Ingreso:</label>
-          <select id="f_requisito">
-            <option value="">-- Seleccionar --</option>
-            <option value="SI">✅ Sí</option>
-            <option value="NO">❌ No</option>
-          </select>
-        </div>
-        <div class="form-group full">
-          <label>Dirección de Habitación:</label>
-          <textarea id="f_direccion" placeholder="Dirección completa del entrevistado"></textarea>
-        </div>
-        <div class="form-group full">
-          <label>Observaciones de la Entrevista:</label>
-          <textarea id="f_observaciones" placeholder="Notas del entrevistador..."></textarea>
-        </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary" id="btnDeshacerTrazo" style="padding:6px 12px;font-size:.8em">↩️ Deshacer</button>
+        <button class="btn btn-danger" id="btnLimpiarPincel" style="padding:6px 12px;font-size:.8em">🧹 Borrar Pintura</button>
       </div>
     </div>
 
-    <div class="actions">
-      <button class="btn btn-success" onclick="saveEmployee()">💾 GUARDAR FICHA</button>
-      <button class="btn btn-primary" onclick="exportPDF()">📄 DESCARGAR PDF</button>
-      <button class="btn btn-warning" onclick="exportJSON()">📤 EXPORTAR JSON</button>
-      <button class="btn btn-secondary" onclick="clearForm()">🗑️ LIMPIAR FORMULARIO</button>
+    <div class="cedula-grid">
+      <div class="cedula-box">
+        <div class="cedula-box-label">
+          <span>1. Imagen Original (Usa el pincel para marcar texto)</span>
+          <span id="brushStatusBadge" style="color:#7c3aed;display:none">● Modo Pincel Activo</span>
+        </div>
+        <div class="cedula-preview" id="cedulaPreview"><div class="placeholder">🪪<br>Sube o fotografía la cédula</div></div>
+      </div>
+      <div class="cedula-box">
+        <div class="cedula-box-label">2. Zona Aislada que leerá el OCR</div>
+        <div class="cedula-preview" id="cedulaProcessedPreview"><div class="placeholder">⚙️<br>Aquí verás el recorte o áreas pintadas</div></div>
+      </div>
     </div>
 
-    <div class="saved-list">
-      <h3>📚 Fichas de Entrevista Registradas (<span id="empCount">0</span>)</h3>
-      <div id="empList"></div>
+    <div class="quality-panel" id="qualityPanel" style="display:none">
+      <h4>📊 Análisis de Calidad de Imagen</h4>
+      <div class="quality-metrics">
+        <div class="metric"><div class="metric-label">Nitidez</div><div class="metric-value" id="mBlur">-</div><div class="metric-bar"><div class="metric-fill" id="mBlurBar"></div></div></div>
+        <div class="metric"><div class="metric-label">Iluminación</div><div class="metric-value" id="mLuz">-</div><div class="metric-bar"><div class="metric-fill" id="mLuzBar"></div></div></div>
+        <div class="metric"><div class="metric-label">Contraste</div><div class="metric-value" id="mContraste">-</div><div class="metric-bar"><div class="metric-fill" id="mContrasteBar"></div></div></div>
+        <div class="metric"><div class="metric-label">Reflejos</div><div class="metric-value" id="mReflejos">-</div><div class="metric-bar"><div class="metric-fill" id="mReflejosBar"></div></div></div>
+      </div>
+      <div class="quality-status" id="qualityStatus">-</div>
     </div>
 
-  </div>
-</div>
-
-<div class="modal" id="previewModal">
-  <div class="modal-content">
-    <button class="modal-close" onclick="closePreview()">✖</button>
-    <div id="previewBody"></div>
-    <div class="modal-actions" style="text-align:center; margin-top:20px;">
-      <button class="btn btn-primary" onclick="window.print()">🖨️ IMPRIMIR / DESCARGAR PDF</button>
+    <div class="btn-group" style="margin-top:15px">
+      <button class="btn btn-success" id="btnProcesarOCR" disabled>🔍 PROCESAR OCR EMPRESARIAL</button>
+      <select id="selModoPreproc" style="padding:10px;border-radius:8px;border:1px solid var(--border);font-weight:600">
+        <option value="auto_kyc">Modo: Automático (Usa Pincel si pintaste, o Recorte KYC)</option>
+        <option value="completo">Modo: Documento Completo (Sin recortes)</option>
+        <option value="binario">Modo: Binarización Fuerte (Cédulas muy gastadas)</option>
+      </select>
+      <button class="btn btn-secondary" id="btnToggleRaw" style="display:none">📄 Ver Texto Crudo</button>
     </div>
-  </div>
+
+    <div class="ocr-progress" id="ocrProgress">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%">0%</div></div>
+      <div class="ocr-log" id="ocrLog"></div>
+    </div>
+
+    <div class="raw-text-box" id="rawTextBox">
+      <label style="font-size:.78em;font-weight:700;color:#475569;display:block;margin-bottom:4px">Texto crudo extraído por Tesseract (útil para verificar lectura):</label>
+      <textarea id="rawTextArea" readonly></textarea>
+    </div>
+
+    <h3>🎯 Datos Detectados</h3>
+    <div class="ocr-zones" id="ocrZones">
+      <div class="ocr-zone"><div class="ocr-zone-label">Número Cédula</div><div class="ocr-zone-value" data-zone="numero">-</div><div class="ocr-zone-conf">-</div></div>
+      <div class="ocr-zone"><div class="ocr-zone-label">Apellidos</div><div class="ocr-zone-value" data-zone="apellidos">-</div><div class="ocr-zone-conf">-</div></div>
+      <div class="ocr-zone"><div class="ocr-zone-label">Nombres</div><div class="ocr-zone-value" data-zone="nombres">-</div><div class="ocr-zone-conf">-</div></div>
+      <div class="ocr-zone"><div class="ocr-zone-label">Fecha Nacimiento</div><div class="ocr-zone-value" data-zone="fecha_nac">-</div><div class="ocr-zone-conf">-</div></div>
+      <div class="ocr-zone"><div class="ocr-zone-label">Estado Civil</div><div class="ocr-zone-value" data-zone="estado_civil">-</div><div class="ocr-zone-conf">-</div></div>
+      <div class="ocr-zone"><div class="ocr-zone-label">Nacionalidad</div><div class="ocr-zone-value" data-zone="nacionalidad">-</div><div class="ocr-zone-conf">-</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>📝 Paso 3: Ficha de Entrevista</h2>
+    <div class="codigo-unico">
+      🆔 Código: <strong id="codigoUnico">-</strong>
+      <button class="btn btn-secondary" id="btnNuevoCodigo" style="margin-left:10px;padding:5px 10px;font-size:.8em">🔄 Nuevo</button>
+    </div>
+    <h3>🤖 Datos Extraídos de la Cédula</h3>
+    <div class="form-grid">
+      <div class="form-group"><label>N° Cédula:</label><input type="text" id="fCedula" placeholder="V-12345678"><div class="field-hint" id="hCedula">Formato: V-12345678</div></div>
+      <div class="form-group"><label>Apellidos:</label><input type="text" id="fApellidos"></div>
+      <div class="form-group"><label>Nombres:</label><input type="text" id="fNombres"></div>
+      <div class="form-group"><label>Fecha Nacimiento:</label><input type="date" id="fFechaNac"></div>
+      <div class="form-group"><label>Estado Civil:</label><select id="fEstadoCivil"><option value="">-- Seleccionar --</option><option>Soltero(a)</option><option>Casado(a)</option><option>Divorciado(a)</option><option>Viudo(a)</option><option>Concubino(a)</option></select></div>
+      <div class="form-group"><label>Nacionalidad:</label><select id="fNacionalidad"><option value="">-- Seleccionar --</option><option>Venezolana</option><option>Extranjera</option></select></div>
+    </div>
+    <h3>✍️ Datos de la Entrevista</h3>
+    <div class="form-grid">
+      <div class="form-group"><label>Empresa:</label><select id="fEmpresa"><option value="">-- Seleccionar --</option><option>Comercializadora La Union 2018 CA (U18)</option><option>Comercializadora La Union 2020 CA (U20)</option><option>Comercial Fortuna 27 CA (Fortuna)</option><option>Confiteria Maikol Ganga C.A (CMG)</option><option>Inversiones Lider Market 168 C.A (ILM)</option><option>CSO SSO RLM</option><option>Otro</option></select></div>
+      <div class="form-group"><label>Fecha Entrevista:</label><input type="date" id="fFechaEnt"></div>
+      <div class="form-group"><label>Teléfono:</label><input type="tel" id="fTelefono" placeholder="0412-1234567"></div>
+      <div class="form-group"><label>Cumple Requisito:</label><select id="fRequisito"><option value="">-- Seleccionar --</option><option value="Si">✅ Sí</option><option value="No">❌ No</option></select></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Dirección:</label><input type="text" id="fDireccion"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Observaciones:</label><textarea id="fObservaciones" rows="3"></textarea></div>
+    </div>
+    <div class="acciones">
+      <button class="btn btn-success" id="btnGuardar">💾 GUARDAR FICHA</button>
+      <button class="btn btn-primary" id="btnPDF">📄 EXPORTAR PDF</button>
+      <button class="btn btn-secondary" id="btnJSON">📤 EXPORTAR JSON</button>
+      <button class="btn btn-danger" id="btnLimpiarForm">🗑️ LIMPIAR FORMULARIO</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>📚 Fichas Registradas (<span id="totalFichas">0</span>)</h2>
+    <div class="btn-group"><button class="btn btn-primary" id="btnImprimirTodo">🖨️ IMPRIMIR TODAS</button></div>
+    <div class="fichas-lista" id="fichasLista"></div>
+  </section>
 </div>
 
 <script>
-const state = {
-  empPhoto: null,
-  docImage: null,
-  croppedDoc: null,
-  stream: null,
-  cropHandles: [{x:10,y:10}, {x:90,y:10}, {x:90,y:90}, {x:10,y:90}],
-  employees: [],
-  currentCode: null
+/* ============================================================
+   FICHA DE ENTREVISTA v11.0 KYC ENTERPRISE
+   - Enmascaramiento de foto y sellos (evita error "Image too small to scale 2x36")
+   - Doble pasada: CLAHE + Otsu + Escala de Grises con PSM 6 (Single Block)
+   - Fusión inteligente de resultados y diccionario de corrección OCR
+   ============================================================ */
+
+const STATE = {
+  fotoEmpleado: null,
+  imagenCedula: null,
+  codigoUnico: null,
+  ocrResultados: {},
+  fichas: JSON.parse(localStorage.getItem('fichas_v11') || localStorage.getItem('fichas_v10') || '[]'),
+  isProcessingOCR: false,
+  tesseractWorker: null,
+  workerReady: false,
+  brushActive: false,
+  hasBrushStrokes: false,
+  brushHistory: []
 };
 
-try {
-  const saved = localStorage.getItem('fichas_entrevista');
-  state.employees = saved ? JSON.parse(saved) : [];
-  if (!Array.isArray(state.employees)) state.employees = [];
-} catch (e) {
-  state.employees = [];
+const $ = id => document.getElementById(id);
+
+// ==================== UI HELPERS (SIN ALERT/CONFIRM) ====================
+function showToast(msg, type = 'info', duration = 3500) {
+  const container = $('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-' + type;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
 }
 
-generateNewCode();
-document.getElementById('f_fechaEntrevista').value = new Date().toISOString().split('T')[0];
-
-function generateNewCode() {
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  state.currentCode = `FICHA-${timestamp}-${random}`;
-  document.getElementById('fichaCode').textContent = state.currentCode;
+function showModal(title, bodyText, buttons) {
+  $('modalTitle').textContent = title;
+  $('modalBody').textContent = bodyText;
+  const actions = $('modalActions');
+  actions.innerHTML = '';
+  buttons.forEach(btnCfg => {
+    const b = document.createElement('button');
+    b.className = 'btn ' + (btnCfg.cls || 'btn-secondary');
+    b.textContent = btnCfg.text;
+    b.onclick = () => {
+      $('customModal').classList.remove('active');
+      if (btnCfg.onClick) btnCfg.onClick();
+    };
+    actions.appendChild(b);
+  });
+  $('customModal').classList.add('active');
 }
 
-async function openCamera(target) {
-  try {
-    const video = document.getElementById(target === 'employee' ? 'empVideo' : 'docVideo');
-    const box = document.getElementById(target === 'employee' ? 'empCameraBox' : 'docCameraBox');
-    state.stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: target === 'employee' ? 'user' : 'environment', width: {ideal:1280}, height: {ideal:720} }
-    });
-    video.srcObject = state.stream;
-    box.classList.remove('hidden');
-  } catch(e) {
-    alert('No se pudo acceder a la cámara: ' + e.message);
+const log = (msg, type = 'info') => {
+  const logEl = $('ocrLog');
+  if (!logEl) return;
+  const div = document.createElement('div');
+  div.className = 'log-' + type;
+  div.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+};
+
+const generarCodigo = () => {
+  const f = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  const r = Math.random().toString(36).substring(2,8).toUpperCase();
+  return 'FIC-' + f + '-' + r;
+};
+
+// ==================== WORKER ÚNICO TESSERACT ====================
+async function obtenerWorkerTesseract() {
+  if (STATE.tesseractWorker && STATE.workerReady) {
+    return STATE.tesseractWorker;
   }
-}
-
-function capturePhoto(target) {
-  const video = document.getElementById(target === 'employee' ? 'empVideo' : 'docVideo');
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-  const dataURL = canvas.toDataURL('image/jpeg', 0.9);
-
-  if (target === 'employee') {
-    state.empPhoto = dataURL;
-    showImageInArea('empImageArea', dataURL);
-    document.getElementById('btnClearEmp').classList.remove('hidden');
-    closeCamera('employee');
-  } else {
-    state.docImage = dataURL;
-    showImageInArea('docImageArea', dataURL);
-    closeCamera('doc');
-    openCropTool(dataURL);
-  }
-}
-
-function closeCamera(target) {
-  const box = document.getElementById(target === 'employee' ? 'empCameraBox' : 'docCameraBox');
-  box.classList.add('hidden');
-  if (state.stream) {
-    state.stream.getTracks().forEach(t => t.stop());
-    state.stream = null;
-  }
-}
-
-function loadImage(event, target) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const dataURL = e.target.result;
-    if (target === 'employee') {
-      state.empPhoto = dataURL;
-      showImageInArea('empImageArea', dataURL);
-      document.getElementById('btnClearEmp').classList.remove('hidden');
-    } else {
-      state.docImage = dataURL;
-      showImageInArea('docImageArea', dataURL);
-      openCropTool(dataURL);
+  log('⏳ Inicializando motor LSTM empresarial...', 'info');
+  const worker = await Tesseract.createWorker('spa', 1, {
+    logger: m => {
+      if (m.status === 'recognizing text' && STATE.isProcessingOCR) {
+        setProgress(40 + m.progress * 50);
+      }
     }
-  };
-  reader.readAsDataURL(file);
+  });
+  // PSM 6 (SINGLE_BLOCK) trata el recorte como un bloque uniforme de texto,
+  // eliminando los errores "Image too small to scale" causados por fotos o escudos.
+  await worker.setParameters({
+    tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+    preserve_interword_spaces: '1',
+    user_defined_dpi: '300'
+  });
+  STATE.tesseractWorker = worker;
+  STATE.workerReady = true;
+  log('✅ Motor LSTM calibrado a 300 DPI', 'success');
+  return worker;
+}
+// ==================== PREPROCESAMIENTO EMPRESARIAL (KYC) ====================
+function normalizarTamano(sourceElement, targetWidth = 1400) {
+  const w = sourceElement.naturalWidth || sourceElement.width;
+  const h = sourceElement.naturalHeight || sourceElement.height;
+  const scale = targetWidth / w;
+  const finalW = Math.round(w * scale);
+  const finalH = Math.round(h * scale);
+
+  const c = document.createElement('canvas');
+  c.width = finalW;
+  c.height = finalH;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(sourceElement, 0, 0, finalW, finalH);
+  return c;
 }
 
-function showImageInArea(areaId, src) {
-  document.getElementById(areaId).innerHTML = `<img src="${src}" alt="imagen">`;
+/**
+ * Recorta la región de datos de la cédula venezolana eliminando:
+ * - El 32% derecho (donde está la foto del ciudadano y el escudo/huella)
+ * - El 15% superior (bandera y encabezado República Bolivariana)
+ * - El 8% inferior (borde de firma/director)
+ * Además añade un margen blanco (padding) de 35px que Tesseract necesita para leer bordes.
+ */
+function extraerZonaDatosKYC(canvasFuente, recortarZonaIzquierda = true) {
+  const w = canvasFuente.width;
+  const h = canvasFuente.height;
+
+  const sx = recortarZonaIzquierda ? Math.round(w * 0.03) : 0;
+  const sy = recortarZonaIzquierda ? Math.round(h * 0.15) : 0;
+  const sw = recortarZonaIzquierda ? Math.round(w * 0.65) : w;
+  const sh = recortarZonaIzquierda ? Math.round(h * 0.77) : h;
+
+  const pad = 35; // Margen blanco esencial para evitar fallos en bordes de línea
+  const out = document.createElement('canvas');
+  out.width = sw + pad * 2;
+  out.height = sh + pad * 2;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, out.width, out.height);
+  ctx.drawImage(canvasFuente, sx, sy, sw, sh, pad, pad, sw, sh);
+  return out;
 }
 
-function clearImage(target) {
-  if (target === 'employee') {
-    state.empPhoto = null;
-    document.getElementById('empImageArea').innerHTML = '<div class="placeholder"><span>👤</span><p>La foto del empleado aparecerá aquí</p></div>';
-    document.getElementById('btnClearEmp').classList.add('hidden');
+function generarVariantesPreprocesamiento(canvasBase, modo, maskCanvas = null) {
+  const variantes = [];
+  let zonaDatos;
+
+  if (maskCanvas) {
+    // Si el usuario pintó con el pincel, conservar ÚNICAMENTE los píxeles pintados sobre fondo blanco puro
+    zonaDatos = aplicarMascaraPincel(canvasBase, maskCanvas);
+  } else {
+    const usarRecorte = (modo !== 'completo');
+    zonaDatos = extraerZonaDatosKYC(canvasBase, usarRecorte);
   }
+
+  // Variante 1: Escala de grises con realce suave (preserva caracteres finos)
+  const cGris = document.createElement('canvas');
+  cGris.width = zonaDatos.width;
+  cGris.height = zonaDatos.height;
+  const ctxG = cGris.getContext('2d');
+  ctxG.filter = 'grayscale(100%) contrast(135%) brightness(105%)';
+  ctxG.drawImage(zonaDatos, 0, 0);
+  variantes.push({ nombre: 'Grises Calibrados', canvas: cGris });
+
+  if (typeof cv !== 'undefined' && cv.Mat) {
+    let src, gray, clahe, claheDst, blurred, thresh;
+    try {
+      src = cv.imread(zonaDatos);
+      gray = new cv.Mat();
+      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+      // CLAHE (Ecualización adaptativa por bloques): neutraliza sombras y el fondo con ondas de la cédula
+      clahe = new cv.CLAHE(2.2, new cv.Size(8, 8));
+      claheDst = new cv.Mat();
+      clahe.apply(gray, claheDst);
+
+      if (modo === 'binario') {
+        blurred = new cv.Mat();
+        cv.GaussianBlur(claheDst, blurred, new cv.Size(3, 3), 0);
+        thresh = new cv.Mat();
+        cv.adaptiveThreshold(blurred, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 35, 15);
+        const cBin = document.createElement('canvas');
+        cBin.width = thresh.cols; cBin.height = thresh.rows;
+        cv.imshow(cBin, thresh);
+        variantes.unshift({ nombre: 'Binarización Adaptativa', canvas: cBin });
+      } else {
+        // Variante 2: CLAHE + Filtro Bilateral (elimina textura del plástico sin romper letras)
+        let clean = new cv.Mat();
+        cv.bilateralFilter(claheDst, clean, 5, 50, 50, cv.BORDER_DEFAULT);
+        const cClahe = document.createElement('canvas');
+        cClahe.width = clean.cols; cClahe.height = clean.rows;
+        cv.imshow(cClahe, clean);
+        clean.delete();
+        variantes.unshift({ nombre: 'CLAHE Anti-Fondo', canvas: cClahe });
+      }
+    } catch (e) {
+      console.warn('OpenCV variante fallback:', e);
+    } finally {
+      if (src) src.delete();
+      if (gray) gray.delete();
+      if (clahe) clahe.delete();
+      if (claheDst) claheDst.delete();
+      if (blurred) blurred.delete();
+      if (thresh) thresh.delete();
+    }
+  }
+
+  return variantes;
 }
 
-function openCropTool(src) {
-  const tool = document.getElementById('cropTool');
-  const img = document.getElementById('cropImage');
-  tool.classList.remove('hidden');
-  img.onload = () => resetCrop();
-  img.src = src;
-}
-
-function resetCrop() {
-  state.cropHandles = [{x:8,y:8}, {x:92,y:8}, {x:92,y:92}, {x:8,y:92}];
-  updateHandles();
-}
-
-function cancelCrop() {
-  document.getElementById('cropTool').classList.add('hidden');
-}
-
-function updateHandles() {
-  const container = document.getElementById('cropContainer');
-  const w = container.offsetWidth;
-  const h = container.offsetHeight;
-  state.cropHandles.forEach((p, i) => {
-    const el = document.getElementById('h'+i);
-    el.style.left = (p.x/100 * w) + 'px';
-    el.style.top = (p.y/100 * h) + 'px';
-  });
-  drawCropPolygon();
-}
-
-function drawCropPolygon() {
-  const svg = document.getElementById('cropSvg');
-  const container = document.getElementById('cropContainer');
-  const w = container.offsetWidth, h = container.offsetHeight;
-  const pts = state.cropHandles.map(p => `${p.x/100*w},${p.y/100*h}`).join(' ');
-  svg.innerHTML = `
-    <polygon points="${pts}" fill="rgba(5,150,105,0.1)" stroke="#059669" stroke-width="2" stroke-dasharray="6,3"/>
-    <polygon points="0,0 ${w},0 ${w},${h} 0,${h}" fill="rgba(0,0,0,0.3)" />
-  `;
-}
-
-['h0','h1','h2','h3'].forEach(id => {
-  const el = document.getElementById(id);
-  let dragging = false;
-  el.addEventListener('mousedown', e => { dragging = true; e.preventDefault(); });
-  el.addEventListener('touchstart', e => { dragging = true; e.preventDefault(); }, {passive:false});
-  document.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    const container = document.getElementById('cropContainer');
-    const rect = container.getBoundingClientRect();
-    const x = Math.max(2, Math.min(98, ((e.clientX - rect.left)/rect.width)*100));
-    const y = Math.max(2, Math.min(98, ((e.clientY - rect.top)/rect.height)*100));
-    state.cropHandles[parseInt(id[1])] = {x, y};
-    updateHandles();
-  });
-  document.addEventListener('touchmove', e => {
-    if (!dragging) return;
-    const touch = e.touches[0];
-    const container = document.getElementById('cropContainer');
-    const rect = container.getBoundingClientRect();
-    const x = Math.max(2, Math.min(98, ((touch.clientX - rect.left)/rect.width)*100));
-    const y = Math.max(2, Math.min(98, ((touch.clientY - rect.top)/rect.height)*100));
-    state.cropHandles[parseInt(id[1])] = {x, y};
-    updateHandles();
-  }, {passive:false});
-  document.addEventListener('mouseup', () => dragging = false);
-  document.addEventListener('touchend', () => dragging = false);
+window.addEventListener('load', () => {
+  STATE.codigoUnico = generarCodigo();
+  $('codigoUnico').textContent = STATE.codigoUnico;
+  $('fFechaEnt').value = new Date().toISOString().slice(0,10);
+  renderFichas();
+  if (typeof cv !== 'undefined' && cv.Mat) {
+    log('✅ OpenCV.js cargado', 'success');
+  } else {
+    let intentos = 0;
+    const iv = setInterval(() => {
+      intentos++;
+      if (typeof cv !== 'undefined' && cv.Mat) {
+        clearInterval(iv);
+        log('✅ OpenCV.js cargado', 'success');
+      } else if (intentos > 30) {
+        clearInterval(iv);
+        log('⚠️ OpenCV.js no cargó - usando modo estándar', 'warn');
+      }
+    }, 300);
+  }
 });
 
-/**
- * TRANSFORMACIÓN HOMOGRAFÍA REAL (Perspectiva 3D → 2D)
- */
-function applyCrop() {
-  const img = document.getElementById('cropImage');
-  if (!img.complete || !img.naturalWidth) {
-    alert('La imagen no está cargada aún.');
-    return;
-  }
-  
-  const w = img.naturalWidth;
-  const h = img.naturalHeight;
-  
-  const srcPts = state.cropHandles.map(p => ({
-    x: (p.x / 100) * w,
-    y: (p.y / 100) * h
-  }));
-  
-  const topW = Math.hypot(srcPts[1].x - srcPts[0].x, srcPts[1].y - srcPts[0].y);
-  const botW = Math.hypot(srcPts[2].x - srcPts[3].x, srcPts[2].y - srcPts[3].y);
-  const leftH = Math.hypot(srcPts[3].x - srcPts[0].x, srcPts[3].y - srcPts[0].y);
-  const rightH = Math.hypot(srcPts[2].x - srcPts[1].x, srcPts[2].y - srcPts[1].y);
-  
-  const outW = Math.round(Math.max(topW, botW));
-  const outH = Math.round(Math.max(leftH, rightH));
-  
-  const dstPts = [
-    {x: 0, y: 0},
-    {x: outW, y: 0},
-    {x: outW, y: outH},
-    {x: 0, y: outH}
-  ];
-  
-  console.log('📐 Recorte perspectivo:', {outW, outH, srcPts});
-  
-  const H = computeHomography(srcPts, dstPts);
-  
-  if (!H) {
-    alert('Error al calcular la transformación. Intenta seleccionar mejor las esquinas.');
-    return;
-  }
-  
-  const canvas = document.createElement('canvas');
-  canvas.width = outW;
-  canvas.height = outH;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  
-  const srcCanvas = document.createElement('canvas');
-  srcCanvas.width = w;
-  srcCanvas.height = h;
-  const srcCtx = srcCanvas.getContext('2d');
-  srcCtx.drawImage(img, 0, 0);
-  const srcData = srcCtx.getImageData(0, 0, w, h).data;
-  
-  const dstImageData = ctx.createImageData(outW, outH);
-  const dstData = dstImageData.data;
-  
-  const Hinv = invertMatrix3x3(H);
-  
-  if (!Hinv) {
-    alert('Error matemático en la transformación.');
-    return;
-  }
-  
-  for (let y = 0; y < outH; y++) {
-    for (let x = 0; x < outW; x++) {
-      const u = Hinv[0]*x + Hinv[1]*y + Hinv[2];
-      const v = Hinv[3]*x + Hinv[4]*y + Hinv[5];
-      const ww = Hinv[6]*x + Hinv[7]*y + Hinv[8];
-      
-      if (ww === 0) continue;
-      
-      const srcX = u / ww;
-      const srcY = v / ww;
-      
-      if (srcX < 0 || srcX >= w - 1 || srcY < 0 || srcY >= h - 1) continue;
-      
-      const x0 = Math.floor(srcX);
-      const y0 = Math.floor(srcY);
-      const x1 = x0 + 1;
-      const y1 = y0 + 1;
-      const dx = srcX - x0;
-      const dy = srcY - y0;
-      
-      const idx00 = (y0 * w + x0) * 4;
-      const idx10 = (y0 * w + x1) * 4;
-      const idx01 = (y1 * w + x0) * 4;
-      const idx11 = (y1 * w + x1) * 4;
-      
-      const dstIdx = (y * outW + x) * 4;
-      
-      for (let c = 0; c < 4; c++) {
-        const val = srcData[idx00+c]*(1-dx)*(1-dy) +
-                    srcData[idx10+c]*dx*(1-dy) +
-                    srcData[idx01+c]*(1-dx)*dy +
-                    srcData[idx11+c]*dx*dy;
-        dstData[dstIdx+c] = val;
-      }
-    }
-  }
-  
-  ctx.putImageData(dstImageData, 0, 0);
-  
-  state.croppedDoc = canvas.toDataURL('image/jpeg', 0.95);
-  showImageInArea('docImageArea', state.croppedDoc);
-  document.getElementById('cropTool').classList.add('hidden');
-  
-  console.log('✅ Recorte perspectivo aplicado:', outW, 'x', outH);
-}
+// ==================== CÁMARA ====================
+let stream = null;
 
-function computeHomography(srcPts, dstPts) {
-  const A = [];
-  for (let i = 0; i < 4; i++) {
-    const x = srcPts[i].x, y = srcPts[i].y;
-    const u = dstPts[i].x, v = dstPts[i].y;
-    
-    A.push([-x, -y, -1, 0, 0, 0, u*x, u*y, u]);
-    A.push([0, 0, 0, -x, -y, -1, v*x, v*y, v]);
-  }
-  
-  const A8 = [];
-  const b = [];
-  for (let i = 0; i < 8; i++) {
-    const row = A[i].slice(0, 8);
-    A8.push(row);
-    b.push(-A[i][8]);
-  }
-  
-  const h = solveLinearSystem(A8, b);
-  if (!h) return null;
-  
-  h.push(1);
-  return h;
-}
-
-function solveLinearSystem(A, b) {
-  const n = A.length;
-  const M = A.map((row, i) => [...row, b[i]]);
-  
-  for (let col = 0; col < n; col++) {
-    let maxRow = col;
-    let maxVal = Math.abs(M[col][col]);
-    for (let row = col + 1; row < n; row++) {
-      if (Math.abs(M[row][col]) > maxVal) {
-        maxVal = Math.abs(M[row][col]);
-        maxRow = row;
-      }
-    }
-    if (maxVal < 1e-10) return null;
-    
-    [M[col], M[maxRow]] = [M[maxRow], M[col]];
-    
-    for (let row = col + 1; row < n; row++) {
-      const factor = M[row][col] / M[col][col];
-      for (let j = col; j <= n; j++) {
-        M[row][j] -= factor * M[col][j];
-      }
-    }
-  }
-  
-  const x = new Array(n);
-  for (let i = n - 1; i >= 0; i--) {
-    let sum = M[i][n];
-    for (let j = i + 1; j < n; j++) {
-      sum -= M[i][j] * x[j];
-    }
-    x[i] = sum / M[i][i];
-  }
-  
-  return x;
-}
-
-function invertMatrix3x3(m) {
-  const [a,b,c,d,e,f,g,h,i] = m;
-  const det = a*(e*i - f*h) - b*(d*i - f*g) + c*(d*h - e*g);
-  if (Math.abs(det) < 1e-10) return null;
-  const invDet = 1 / det;
-  return [
-    (e*i - f*h) * invDet, (c*h - b*i) * invDet, (b*f - c*e) * invDet,
-    (f*g - d*i) * invDet, (a*i - c*g) * invDet, (c*d - a*f) * invDet,
-    (d*h - e*g) * invDet, (b*g - a*h) * invDet, (a*e - b*d) * invDet
-  ];
-}
-
-/**
- * OCR PROFESIONAL CON ROIs RECALIBRADOS
- * Basado en estructura REAL de cédula venezolana recortada:
- * - 0-18%: Encabezado (REPÚBLICA... CÉDULA DE IDENTIDAD)
- * - 18-25%: Número de cédula (V-xxxxxxx)
- * - 25-35%: APELLIDOS
- * - 35-45%: NOMBRES
- * - 55-65%: Fecha nacimiento + Estado civil
- * - 65-75%: Fecha expedición + Fecha vencimiento
- */
-async function runProfessionalOCR() {
-  const src = state.croppedDoc || state.docImage;
-  if (!src) { alert('Primero sube o fotografía una cédula.'); return; }
-
-  const status = document.getElementById('ocrStatus');
-  const progress = document.getElementById('ocrProgress');
-  
-  status.textContent = 'Cargando imagen...';
-  progress.style.width = '5%';
-
+$('btnCamara').onclick = async () => {
   try {
-    const img = new Image();
-    img.src = src;
-    await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = reject;
-    });
-    
-    const canvas = document.createElement('canvas');
-    canvas.width = img.width;
-    canvas.height = img.height;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-    
-    const width = canvas.width;
-    const height = canvas.height;
-    
-    console.log(`📐 Imagen recortada: ${width}x${height}`);
-    
-    status.textContent = 'Segmentando regiones (ROIs recalibrados)...';
-    progress.style.width = '15%';
-    
-    // ROIs recalibrados basados en estructura real de cédula venezolana
-    const rois = {
-      cedula: { x: 0.30, y: 0.18, w: 0.45, h: 0.08, label: 'Número Cédula' },
-      apellidos: { x: 0.05, y: 0.28, w: 0.50, h: 0.08, label: 'Apellidos' },
-      nombres: { x: 0.05, y: 0.37, w: 0.50, h: 0.08, label: 'Nombres' },
-      fechas: { x: 0.15, y: 0.55, w: 0.50, h: 0.20, label: 'Fechas' },
-      estado: { x: 0.35, y: 0.55, w: 0.30, h: 0.10, label: 'Estado Civil' }
+    stopCamara();
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}}});
+    $('video').srcObject = stream;
+    $('camaraBox').style.display = 'block';
+  } catch(e) { showToast('No se pudo acceder a la cámara: ' + e.message, 'error'); }
+};
+
+$('btnCapturar').onclick = () => {
+  const v = $('video');
+  const c = document.createElement('canvas');
+  c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext('2d').drawImage(v, 0, 0);
+  STATE.fotoEmpleado = c.toDataURL('image/jpeg', 0.9);
+  $('fotoPreview').innerHTML = '<img src="' + STATE.fotoEmpleado + '">';
+  stopCamara();
+};
+
+$('btnCancelarCam').onclick = stopCamara;
+
+function stopCamara() {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  $('camaraBox').style.display = 'none';
+}
+
+$('btnSubirFoto').onclick = () => $('inputFoto').click();
+$('inputFoto').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    STATE.fotoEmpleado = ev.target.result;
+    $('fotoPreview').innerHTML = '<img src="' + STATE.fotoEmpleado + '">';
+  };
+  r.readAsDataURL(f);
+};
+
+$('btnLimpiarFoto').onclick = () => {
+  STATE.fotoEmpleado = null;
+  $('fotoPreview').innerHTML = '<div class="placeholder">👤<br>La foto aparecerá aquí</div>';
+};
+
+// ==================== CÉDULA ====================
+$('btnFotoCedula').onclick = async () => {
+  try {
+    stopCamara();
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920}}});
+    const v = document.createElement('video');
+    v.autoplay = true; v.playsInline = true;
+    v.style.cssText = 'width:100%;height:100%;object-fit:contain';
+    v.srcObject = stream;
+    $('cedulaPreview').innerHTML = '';
+    $('cedulaPreview').appendChild(v);
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-success';
+    btn.textContent = '📸 Capturar Cédula';
+    btn.style.cssText = 'position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:10';
+    btn.onclick = () => {
+      const c = document.createElement('canvas');
+      c.width = v.videoWidth; c.height = v.videoHeight;
+      c.getContext('2d').drawImage(v, 0, 0);
+      cargarCedula(c.toDataURL('image/jpeg', 0.95));
+      stopCamara();
     };
-    
-    const roiImages = {};
-    for (const [key, roi] of Object.entries(rois)) {
-      const roiCanvas = document.createElement('canvas');
-      roiCanvas.width = Math.max(100, Math.floor(width * roi.w));
-      roiCanvas.height = Math.max(50, Math.floor(height * roi.h));
-      const roiCtx = roiCanvas.getContext('2d');
-      
-      roiCtx.drawImage(
-        canvas,
-        Math.floor(width * roi.x), Math.floor(height * roi.y),
-        roiCanvas.width, roiCanvas.height,
-        0, 0, roiCanvas.width, roiCanvas.height
-      );
-      
-      const processed = await preprocessROI(roiCanvas);
-      roiImages[key] = processed;
+    $('cedulaPreview').appendChild(btn);
+  } catch(e) { showToast('Error cámara: ' + e.message, 'error'); }
+};
+
+$('btnSubirCedula').onclick = () => $('inputCedula').click();
+$('inputCedula').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => cargarCedula(ev.target.result);
+  r.readAsDataURL(f);
+};
+
+function cargarCedula(dataUrl) {
+  STATE.imagenCedula = dataUrl;
+  STATE.hasBrushStrokes = false;
+  STATE.brushHistory = [];
+  $('cedulaProcessedPreview').innerHTML = '<div class="placeholder">⚙️<br>Listo para procesar</div>';
+  $('btnProcesarOCR').disabled = false;
+  $('btnRotarCedula').disabled = false;
+  $('btnTogglePincel').disabled = false;
+
+  inicializarLienzoPincel(dataUrl);
+  setTimeout(() => analizarCalidad(dataUrl), 200);
+}
+
+// ==================== SISTEMA DE PINCEL INTERACTIVO (MOUSE + TÁCTIL) ====================
+function inicializarLienzoPincel(dataUrl) {
+  const img = new Image();
+  img.onload = () => {
+    const container = $('cedulaPreview');
+    container.innerHTML = '';
+
+    const stack = document.createElement('div');
+    stack.className = 'brush-canvas-stack';
+
+    const baseCanvas = document.createElement('canvas');
+    baseCanvas.id = 'cedulaBaseCanvas';
+    baseCanvas.width = img.width;
+    baseCanvas.height = img.height;
+    baseCanvas.getContext('2d').drawImage(img, 0, 0);
+
+    const overlay = document.createElement('canvas');
+    overlay.id = 'brushOverlay';
+    overlay.width = img.width;
+    overlay.height = img.height;
+
+    stack.appendChild(baseCanvas);
+    stack.appendChild(overlay);
+    container.appendChild(stack);
+
+    configurarEventosPincel(overlay);
+    // Activar el pincel automáticamente para facilitar la selección
+    if (!STATE.brushActive) {
+      toggleModoPincel(true);
     }
-    
-    document.getElementById('roiPreview').classList.remove('hidden');
-    document.getElementById('roi-cedula').src = roiImages.cedula;
-    document.getElementById('roi-apellidos').src = roiImages.apellidos;
-    document.getElementById('roi-nombres').src = roiImages.nombres;
-    document.getElementById('roi-fechas').src = roiImages.fechas;
-    document.getElementById('roi-estado').src = roiImages.estado;
-    
-    status.textContent = 'Aplicando OCR a cada región...';
-    progress.style.width = '30%';
-    
-    const lang = document.getElementById('ocrLang').value;
-    
-    const results = {
-      cedula: await ocrRegion(roiImages.cedula, 'Número de cédula', lang, progress, 30, 45),
-      apellidos: await ocrRegion(roiImages.apellidos, 'Apellidos', lang, progress, 45, 60),
-      nombres: await ocrRegion(roiImages.nombres, 'Nombres', lang, progress, 60, 75),
-      fechas: await ocrRegion(roiImages.fechas, 'Fechas', lang, progress, 75, 90),
-      estado: await ocrRegion(roiImages.estado, 'Estado civil', lang, progress, 90, 100)
-    };
-    
-    const fullText = Object.entries(results).map(([k,v]) => `=== ${k.toUpperCase()} ===\n${v}`).join('\n\n');
-    document.getElementById('ocrRawText').value = fullText;
-    
-    status.textContent = '✅ OCR profesional completado';
-    progress.style.width = '100%';
-    
-    parseProfessionalOCR(results);
-    
-  } catch(e) {
-    status.textContent = '❌ Error: ' + e.message;
-    console.error('Error en OCR:', e);
+  };
+  img.src = dataUrl;
+}
+
+function toggleModoPincel(forzarEstado = null) {
+  STATE.brushActive = forzarEstado !== null ? forzarEstado : !STATE.brushActive;
+  const btn = $('btnTogglePincel');
+  const toolbar = $('brushToolbar');
+  const badge = $('brushStatusBadge');
+  const overlay = $('brushOverlay');
+
+  if (STATE.brushActive) {
+    btn.textContent = '🖌️ Pincel de Selección: ON';
+    btn.style.background = '#6d28d9';
+    toolbar.classList.add('active');
+    badge.style.display = 'inline';
+    if (overlay) overlay.style.pointerEvents = 'auto';
+  } else {
+    btn.textContent = '🖌️ Pincel de Selección: OFF';
+    btn.style.background = '#64748b';
+    toolbar.classList.remove('active');
+    badge.style.display = 'none';
+    if (overlay) overlay.style.pointerEvents = 'none';
   }
+}
+
+$('btnTogglePincel').onclick = () => toggleModoPincel();
+
+$('brushSize').oninput = e => {
+  $('brushSizeVal').textContent = e.target.value + 'px';
+};
+
+function configurarEventosPincel(canvas) {
+  const ctx = canvas.getContext('2d');
+  let dibujando = false;
+  let lastPt = null;
+
+  function obtenerCoordenadas(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  function iniciarTrazo(e) {
+    if (!STATE.brushActive || STATE.isProcessingOCR) return;
+    if (e.cancelable) e.preventDefault();
+    dibujando = true;
+    // Guardar snapshot para deshacer
+    STATE.brushHistory.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    if (STATE.brushHistory.length > 15) STATE.brushHistory.shift();
+
+    lastPt = obtenerCoordenadas(e);
+    trazarPunto(lastPt, lastPt);
+  }
+
+  function moverTrazo(e) {
+    if (!dibujando || !STATE.brushActive) return;
+    if (e.cancelable) e.preventDefault();
+    const pt = obtenerCoordenadas(e);
+    trazarPunto(lastPt, pt);
+    lastPt = pt;
+  }
+
+  function finalizarTrazo(e) {
+    if (!dibujando) return;
+    dibujando = false;
+    lastPt = null;
+    STATE.hasBrushStrokes = true;
+    actualizarVistaPreviaPincel();
+  }
+
+  function trazarPunto(p1, p2) {
+    const rect = canvas.getBoundingClientRect();
+    const factorEscala = canvas.width / (rect.width || canvas.width);
+    const grosorReal = parseInt($('brushSize').value, 10) * factorEscala;
+
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = grosorReal;
+    // Resaltador amarillo/violeta translúcido visible sobre la cédula
+    ctx.strokeStyle = 'rgba(250, 204, 21, 0.48)';
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Eventos Mouse (PC)
+  canvas.addEventListener('mousedown', iniciarTrazo);
+  window.addEventListener('mousemove', moverTrazo);
+  window.addEventListener('mouseup', finalizarTrazo);
+
+  // Eventos Táctiles (Móvil / Tablet)
+  canvas.addEventListener('touchstart', iniciarTrazo, { passive: false });
+  canvas.addEventListener('touchmove', moverTrazo, { passive: false });
+  canvas.addEventListener('touchend', finalizarTrazo);
+}
+
+$('btnDeshacerTrazo').onclick = () => {
+  const overlay = $('brushOverlay');
+  if (!overlay || STATE.brushHistory.length === 0) return;
+  const ctx = overlay.getContext('2d');
+  const prev = STATE.brushHistory.pop();
+  ctx.putImageData(prev, 0, 0);
+  STATE.hasBrushStrokes = STATE.brushHistory.length > 0;
+  actualizarVistaPreviaPincel();
+};
+
+$('btnLimpiarPincel').onclick = () => {
+  const overlay = $('brushOverlay');
+  if (!overlay) return;
+  overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
+  STATE.brushHistory = [];
+  STATE.hasBrushStrokes = false;
+  $('cedulaProcessedPreview').innerHTML = '<div class="placeholder">⚙️<br>Pintura borrada</div>';
+};
+
+function actualizarVistaPreviaPincel() {
+  const base = $('cedulaBaseCanvas');
+  const overlay = $('brushOverlay');
+  if (!base || !overlay || !STATE.hasBrushStrokes) return;
+  const recortado = aplicarMascaraPincel(base, overlay);
+  $('cedulaProcessedPreview').innerHTML = '';
+  $('cedulaProcessedPreview').appendChild(recortado);
 }
 
 /**
- * Preprocesamiento AVANZADO: escala 3x, escala de grises, contraste alto, umbral adaptativo local
+ * Extrae el bounding-box de los trazos pintados y reemplaza todo lo no pintado por blanco puro (#FFFFFF),
+ * permitiendo que Tesseract lea exclusivamente las palabras subrayadas por el usuario.
  */
-async function preprocessROI(canvas) {
-  const w = canvas.width;
-  const h = canvas.height;
-  
-  const scaled = document.createElement('canvas');
-  scaled.width = w * 3;
-  scaled.height = h * 3;
-  const sctx = scaled.getContext('2d');
-  sctx.imageSmoothingEnabled = true;
-  sctx.imageSmoothingQuality = 'high';
-  sctx.drawImage(canvas, 0, 0, scaled.width, scaled.height);
-  
-  const imageData = sctx.getImageData(0, 0, scaled.width, scaled.height);
-  const data = imageData.data;
-  
-  // Paso 1: Escala de grises
-  const gray = new Float32Array(data.length / 4);
-  for (let i = 0; i < data.length; i += 4) {
-    gray[i/4] = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-  }
-  
-  // Paso 2: Umbral adaptativo local (ventana 15x15)
-  const windowSize = 15;
-  const halfWindow = Math.floor(windowSize / 2);
-  const offset = 5; // Constante para ajustar sensibilidad
-  
-  for (let y = 0; y < scaled.height; y++) {
-    for (let x = 0; x < scaled.width; x++) {
-      const idx = y * scaled.width + x;
-      
-      // Calcular media local
-      let sum = 0;
-      let count = 0;
-      for (let wy = -halfWindow; wy <= halfWindow; wy++) {
-        for (let wx = -halfWindow; wx <= halfWindow; wx++) {
-          const ny = y + wy;
-          const nx = x + wx;
-          if (ny >= 0 && ny < scaled.height && nx >= 0 && nx < scaled.width) {
-            sum += gray[ny * scaled.width + nx];
-            count++;
-          }
-        }
-      }
-      const mean = sum / count;
-      
-      // Binarización adaptativa
-      const pixelIdx = idx * 4;
-      const value = gray[idx] < (mean - offset) ? 0 : 255;
-      data[pixelIdx] = value;
-      data[pixelIdx+1] = value;
-      data[pixelIdx+2] = value;
-      data[pixelIdx+3] = 255;
-    }
-  }
-  
-  sctx.putImageData(imageData, 0, 0);
-  return scaled.toDataURL('image/png');
-}
+function aplicarMascaraPincel(imgCanvas, maskCanvas) {
+  const w = imgCanvas.width;
+  const h = imgCanvas.height;
 
-async function ocrRegion(dataURL, regionName, lang, progress, startPct, endPct) {
-  const result = await Tesseract.recognize(dataURL, lang, {
-    logger: m => {
-      if (m.status === 'recognizing text') {
-        const pct = startPct + m.progress * (endPct - startPct);
-        progress.style.width = pct + '%';
+  // Escalar máscara si imgCanvas fue normalizado a otro tamaño
+  const mScaled = document.createElement('canvas');
+  mScaled.width = w;
+  mScaled.height = h;
+  mScaled.getContext('2d').drawImage(maskCanvas, 0, 0, w, h);
+
+  const mData = mScaled.getContext('2d').getImageData(0, 0, w, h).data;
+  let minX = w, minY = h, maxX = 0, maxY = 0;
+  let hayPixeles = false;
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const alpha = mData[(y * w + x) * 4 + 3];
+      if (alpha > 10) {
+        hayPixeles = true;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
       }
     }
-  });
-  
-  const text = result.data.text.trim();
-  console.log(`📝 ${regionName}: "${text}"`);
-  
-  const textEl = document.getElementById(`roi-${regionName.toLowerCase().split('/')[0]}-text`);
-  if (textEl) textEl.textContent = text.substring(0, 60) + (text.length > 60 ? '...' : '');
-  
-  return text;
+  }
+
+  if (!hayPixeles) return imgCanvas;
+
+  const cropW = Math.max(10, maxX - minX + 1);
+  const cropH = Math.max(10, maxY - minY + 1);
+  const pad = 35;
+
+  // Crear composición enmascarada (solo píxeles pintados)
+  const masked = document.createElement('canvas');
+  masked.width = cropW;
+  masked.height = cropH;
+  const mCtx = masked.getContext('2d');
+  mCtx.drawImage(mScaled, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+  mCtx.globalCompositeOperation = 'source-in';
+  mCtx.drawImage(imgCanvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+
+  // Colocar sobre lienzo blanco puro con margen
+  const finalCanvas = document.createElement('canvas');
+  finalCanvas.width = cropW + pad * 2;
+  finalCanvas.height = cropH + pad * 2;
+  const fCtx = finalCanvas.getContext('2d');
+  fCtx.fillStyle = '#FFFFFF';
+  fCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+  fCtx.drawImage(masked, pad, pad);
+
+  // Normalizar ancho óptimo (~1350px) para Tesseract
+  return normalizarTamano(finalCanvas, 1350);
 }
 
-function parseProfessionalOCR(results) {
-  console.log('=== ANÁLISIS OCR PROFESIONAL ===');
-  
-  // 1. Cédula
-  const cedulaMatch = results.cedula.match(/([VE])[\s\-\.]?(\d{2,3}[\s\.]?\d{3}[\s\.]?\d{3})/i);
-  if (cedulaMatch) {
-    const cedula = `${cedulaMatch[1].toUpperCase()}-${cedulaMatch[2].replace(/[\s\.]/g, '')}`;
-    document.getElementById('f_cedula').value = cedula;
-    console.log('✅ Cédula:', cedula);
-  }
-  
-  // 2. Fechas
-  const datePattern = /(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/g;
-  const dates = [];
-  let match;
-  const allText = results.fechas + ' ' + results.apellidos + ' ' + results.nombres;
-  while ((match = datePattern.exec(allText)) !== null) {
-    const day = parseInt(match[1]);
-    const month = parseInt(match[2]);
-    const year = parseInt(match[3]);
-    if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 1900 && year <= 2100) {
-      dates.push({ 
-        day, month, year, 
-        full: `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+// Botón rotar imagen por si la foto se tomó vertical
+$('btnRotarCedula').onclick = async () => {
+  if (!STATE.imagenCedula || STATE.isProcessingOCR) return;
+  const img = await cargarImagen(STATE.imagenCedula);
+  const c = document.createElement('canvas');
+  c.width = img.height;
+  c.height = img.width;
+  const ctx = c.getContext('2d');
+  ctx.translate(c.width / 2, c.height / 2);
+  ctx.rotate(Math.PI / 2);
+  ctx.drawImage(img, -img.width / 2, -img.height / 2);
+  cargarCedula(c.toDataURL('image/jpeg', 0.95));
+  showToast('Imagen rotada 90°', 'info', 2000);
+};
+
+// ==================== ANÁLISIS DE CALIDAD ====================
+function analizarCalidad(dataUrl) {
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    // Reducir muestra para cálculo rápido sin bloquear UI
+    const scale = Math.min(1, 600 / Math.max(img.width, img.height));
+    c.width = Math.round(img.width * scale);
+    c.height = Math.round(img.height * scale);
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    const data = ctx.getImageData(0, 0, c.width, c.height).data;
+    let sum = 0, sumSq = 0, bright = 0;
+    const n = data.length / 4;
+    const gray = new Float32Array(n);
+    for (let i = 0; i < data.length; i += 4) {
+      const g = 0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2];
+      gray[i/4] = g;
+      sum += g; sumSq += g*g;
+      if (g > 242) bright++;
+    }
+    const mean = sum / n;
+    const std = Math.sqrt(Math.max(0, sumSq/n - mean*mean));
+    const sobreexp = bright / n;
+    let lapSum = 0;
+    const w = c.width;
+    for (let y = 1; y < c.height - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = y*w + x;
+        const lap = -gray[i-w] - gray[i-1] + 4*gray[i] - gray[i+1] - gray[i+w];
+        lapSum += lap*lap;
+      }
+    }
+    const blurScore = lapSum / ((w-2)*(c.height-2));
+    $('qualityPanel').style.display = 'block';
+    $('mBlur').textContent = blurScore.toFixed(1);
+    $('mLuz').textContent = mean.toFixed(0);
+    $('mContraste').textContent = std.toFixed(1);
+    $('mReflejos').textContent = (sobreexp*100).toFixed(1) + '%';
+    setBar('mBlurBar', Math.min(blurScore/2.5, 100), blurScore > 80 ? 'var(--success)' : blurScore > 40 ? 'var(--warning)' : 'var(--danger)');
+    setBar('mLuzBar', Math.min(mean/255*100, 100), (mean > 60 && mean < 210) ? 'var(--success)' : 'var(--danger)');
+    setBar('mContrasteBar', Math.min(std/90*100, 100), std > 35 ? 'var(--success)' : 'var(--danger)');
+    setBar('mReflejosBar', sobreexp*100*3, sobreexp < 0.15 ? 'var(--success)' : sobreexp < 0.3 ? 'var(--warning)' : 'var(--danger)');
+    const usable = blurScore > 70 && mean > 60 && mean < 210 && std > 35 && sobreexp < 0.18;
+    const warn = !usable && blurScore > 35 && mean > 40 && mean < 225;
+    const status = $('qualityStatus');
+    if (usable) { status.className = 'quality-status quality-ok'; status.textContent = '✅ Imagen APTA para OCR de alta precisión'; }
+    else if (warn) { status.className = 'quality-status quality-warn'; status.textContent = '⚠️ Imagen aceptable (si falla, prueba cambiar el modo de limpieza)'; }
+    else { status.className = 'quality-status quality-bad'; status.textContent = '❌ Imagen borrosa o con mucho reflejo - intenta enfocar mejor'; }
+  };
+  img.src = dataUrl;
+}
+
+function setBar(id, pct, color) {
+  const el = $(id);
+  el.style.width = Math.max(0, Math.min(100, pct)) + '%';
+  el.style.background = color;
+}
+
+// ==================== DETECCIÓN DE BORDES (HOMOGRAFÍA SEGURA) ====================
+function detectarCedula(imgElement) {
+  if (typeof cv === 'undefined' || !cv.Mat) return null;
+  let src, gray, blurred, edges, kernel, dilated, contours, hierarchy;
+  try {
+    // Usar copia reducida para detectar bordes rápido
+    const small = normalizarTamano(imgElement, 800);
+    const scaleBack = (imgElement.naturalWidth || imgElement.width) / small.width;
+
+    src = cv.imread(small);
+    gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+    blurred = new cv.Mat();
+    cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0);
+    edges = new cv.Mat();
+    cv.Canny(blurred, edges, 40, 140);
+    kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(5, 5));
+    dilated = new cv.Mat();
+    cv.dilate(edges, dilated, kernel);
+    contours = new cv.MatVector();
+    hierarchy = new cv.Mat();
+    cv.findContours(dilated, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+    let maxArea = 0, bestContour = null;
+    const imgArea = src.rows * src.cols;
+
+    for (let i = 0; i < contours.size(); i++) {
+      const cnt = contours.get(i);
+      const area = cv.contourArea(cnt);
+      const peri = cv.arcLength(cnt, true);
+      const approx = new cv.Mat();
+      cv.approxPolyDP(cnt, approx, 0.025 * peri, true);
+      // Debe tener 4 vértices y ocupar al menos 25% de la imagen
+      if (approx.rows === 4 && area > imgArea * 0.25 && area > maxArea) {
+        maxArea = area;
+        if (bestContour) bestContour.delete();
+        bestContour = approx;
+      } else {
+        approx.delete();
+      }
+      cnt.delete();
+    }
+
+    if (!bestContour) return null;
+    const pts = [];
+    for (let i = 0; i < 4; i++) {
+      pts.push({
+        x: bestContour.data32S[i*2] * scaleBack,
+        y: bestContour.data32S[i*2+1] * scaleBack
       });
     }
+    bestContour.delete();
+
+    pts.sort((a,b) => a.y - b.y);
+    const top = pts.slice(0,2).sort((a,b) => a.x - b.x);
+    const bot = pts.slice(2,4).sort((a,b) => a.x - b.x);
+
+    // Verificar proporción rectangular válida (cédula ~ 1.58:1)
+    const wTop = Math.hypot(top[1].x - top[0].x, top[1].y - top[0].y);
+    const hLeft = Math.hypot(bot[0].x - top[0].x, bot[0].y - top[0].y);
+    const ratio = wTop / (hLeft || 1);
+    if (ratio < 1.2 || ratio > 2.0) return null;
+
+    return [top[0], top[1], bot[1], bot[0]];
+  } catch(e) {
+    return null;
+  } finally {
+    if (src) src.delete();
+    if (gray) gray.delete();
+    if (blurred) blurred.delete();
+    if (edges) edges.delete();
+    if (kernel) kernel.delete();
+    if (dilated) dilated.delete();
+    if (contours) contours.delete();
+    if (hierarchy) hierarchy.delete();
   }
-  if (dates.length > 0) {
-    dates.sort((a, b) => new Date(a.year, a.month-1, a.day) - new Date(b.year, b.month-1, b.day));
-    document.getElementById('f_nacimiento').value = dates[0].full;
-    console.log('✅ Fecha nacimiento:', dates[0].full);
-  }
-  
-  // 3. Estado civil
-  const estadoPatterns = [
-    { pattern: /SOLTER[OA]/i, value: 'Soltero(a)' },
-    { pattern: /CASAD[OA]/i, value: 'Casado(a)' },
-    { pattern: /DIVORCIAD[OA]/i, value: 'Divorciado(a)' },
-    { pattern: /VIUD[OA]/i, value: 'Viudo(a)' },
-    { pattern: /CONCUBIN[OA]/i, value: 'Concubino(a)' },
-    { pattern: /RESIDENTE/i, value: 'Residente' }
-  ];
-  for (const { pattern, value } of estadoPatterns) {
-    if (pattern.test(results.estado + ' ' + results.fechas)) {
-      document.getElementById('f_estadoCivil').value = value;
-      console.log('✅ Estado civil:', value);
-      break;
-    }
-  }
-  
-  // 4. Nacionalidad
-  if (/VENEZOLAN[OA]/i.test(results.estado + ' ' + results.fechas)) {
-    document.getElementById('f_nacionalidad').value = 'Venezolana';
-  } else if (/EXTRANJER[OA]/i.test(results.estado + ' ' + results.fechas)) {
-    document.getElementById('f_nacionalidad').value = 'Extranjera';
-  }
-  
-  // 5. Apellidos (de ROI específico)
-  const apellidosText = results.apellidos.trim();
-  if (apellidosText && apellidosText.length > 2) {
-    const cleanApellidos = apellidosText.replace(/[^A-ZÁÉÍÓÚÑ\s]/gi, '').trim();
-    if (cleanApellidos.length >= 3) {
-      document.getElementById('f_apellidos').value = cleanApellidos;
-      console.log('✅ Apellidos:', cleanApellidos);
-    }
-  }
-  
-  // 6. Nombres (de ROI específico)
-  const nombresText = results.nombres.trim();
-  if (nombresText && nombresText.length > 2) {
-    const cleanNombres = nombresText.replace(/[^A-ZÁÉÍÓÚÑ\s]/gi, '').trim();
-    if (cleanNombres.length >= 3) {
-      document.getElementById('f_nombres').value = cleanNombres;
-      console.log('✅ Nombres:', cleanNombres);
-    }
-  }
-  
-  console.log('=== ANÁLISIS COMPLETO ===');
 }
 
-function reparseOCR() {
-  const text = document.getElementById('ocrRawText').value;
-  parseProfessionalOCR({
-    cedula: text, apellidos: text, nombres: text, fechas: text, estado: text
+function aplicarHomografia(imgElement, corners) {
+  let src, dstCorners, srcCorners, M, dst;
+  try {
+    src = cv.imread(imgElement);
+    const dstW = 1450;
+    const dstH = Math.round(dstW / 1.585);
+    dstCorners = cv.matFromArray(4, 1, cv.CV_32FC2, [0,0, dstW-1,0, dstW-1,dstH-1, 0,dstH-1]);
+    srcCorners = cv.matFromArray(4, 1, cv.CV_32FC2, [
+      corners[0].x,corners[0].y, corners[1].x,corners[1].y,
+      corners[2].x,corners[2].y, corners[3].x,corners[3].y
+    ]);
+    M = cv.getPerspectiveTransform(srcCorners, dstCorners);
+    dst = new cv.Mat();
+    cv.warpPerspective(src, dst, M, new cv.Size(dstW, dstH), cv.INTER_CUBIC, cv.BORDER_CONSTANT, new cv.Scalar());
+    const canvas = document.createElement('canvas');
+    canvas.width = dstW; canvas.height = dstH;
+    cv.imshow(canvas, dst);
+    return canvas;
+  } catch(e) {
+    return imgElement;
+  } finally {
+    if (src) src.delete();
+    if (dst) dst.delete();
+    if (M) M.delete();
+    if (srcCorners) srcCorners.delete();
+    if (dstCorners) dstCorners.delete();
+  }
+}
+
+// ==================== PARSER ESTRUCTURAL DE CÉDULA VENEZOLANA ====================
+function limpiarNombrePropio(str) {
+  if (!str) return '';
+  const palabrasProhibidas = /^(REPUBLICA|BOLIVARIANA|VENEZUELA|CEDULA|IDENTIDAD|APELLIDOS|APELLIDO|NOMBRES|NOMBRE|FECHA|NACIMIENTO|ESTADO|CIVIL|SOLTERO|SOLTERA|CASADO|CASADA|DIVORCIADO|VIUDO|DIRECTOR|FIRMA|TITULAR|VENEZOLANO|VENEZOLANA|EXTRANJERO|EXTRANJERA|EXPEDICION|VENCIMIENTO|SERIE|SAIME|ONIDEX)$/i;
+
+  // Limpiar símbolos parásitos dejando solo letras y espacios
+  let limpio = str
+    .replace(/[0-9|\\/_\-=+*•·.,:;()[\]{}«»"'<>~^`´]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const palabras = limpio.split(' ').filter(p => {
+    // Filtrar letras sueltas (ruido OCR) excepto conectores reales como DE, DEL, LA, LOS, Y
+    const esConector = /^(DE|DEL|LA|LAS|LOS|Y|DA|DO|DOS)$/i.test(p);
+    return (p.length >= 2 || esConector) && p.length <= 20 && !palabrasProhibidas.test(p);
+  });
+
+  return palabras
+    .map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
+    .join(' ');
+}
+
+function corregirDigitosOCR(str) {
+  return str
+    .replace(/[OoQqDd]/g, '0')
+    .replace(/[IiLl|!]/g, '1')
+    .replace(/[Zz]/g, '2')
+    .replace(/[Ss$]/g, '5')
+    .replace(/[Gg]/g, '6')
+    .replace(/[Bb]/g, '8');
+}
+
+function extraerDatosCedulaVenezuela(textoCrudo) {
+  const lineas = textoCrudo
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(l => l.length > 1);
+
+  const textoUpper = textoCrudo.toUpperCase();
+  const res = {
+    numero: { texto: '', confianza: 0, valido: false, metodo: 'no-encontrado' },
+    apellidos: { texto: '', confianza: 0, valido: false, metodo: 'no-encontrado' },
+    nombres: { texto: '', confianza: 0, valido: false, metodo: 'no-encontrado' },
+    fecha_nac: { texto: '', confianza: 0, valido: false, metodo: 'no-encontrada' },
+    estado_civil: { texto: '', confianza: 0, valido: false, metodo: 'no-encontrado' },
+    nacionalidad: { texto: '', confianza: 0, valido: false, metodo: 'no-encontrada' }
+  };
+
+  // 1. NÚMERO DE CÉDULA (Con corrección de caracteres confundidos como O->0, I->1)
+  for (const linea of lineas) {
+    const lUpper = linea.toUpperCase();
+    // Buscar patrón V 12.345.678 o V-12345678
+    const mPrefijo = lUpper.match(/\b([VE])\s*[-.:]?\s*([0-9OILSBG.,\s]{6,13})\b/);
+    if (mPrefijo) {
+      const letra = mPrefijo[1];
+      const soloDigitos = corregirDigitosOCR(mPrefijo[2]).replace(/\D/g, '');
+      if (soloDigitos.length >= 6 && soloDigitos.length <= 9) {
+        res.numero = { texto: `${letra}-${soloDigitos}`, confianza: 97, valido: true, metodo: 'prefijo+dígitos' };
+        break;
+      }
+    }
+  }
+
+  if (!res.numero.valido) {
+    // Fallback: secuencia con puntos de miles (ej. 18.456.789 o 8.456.789)
+    const mPuntos = textoUpper.match(/\b([0-9OILSBG]{1,2}\.[0-9OILSBG]{3}\.[0-9OILSBG]{3})\b/);
+    if (mPuntos) {
+      const digitos = corregirDigitosOCR(mPuntos[1]).replace(/\D/g, '');
+      if (digitos.length >= 7 && digitos.length <= 8) {
+        res.numero = { texto: `V-${digitos}`, confianza: 86, valido: true, metodo: 'formato-puntos' };
+      }
+    }
+  }
+
+  if (!res.numero.valido) {
+    const soloNum = textoUpper.match(/\b(\d{7,8})\b/);
+    if (soloNum) {
+      res.numero = { texto: `V-${soloNum[1]}`, confianza: 72, valido: true, metodo: 'numérico' };
+    }
+  }
+
+  // 2. NACIONALIDAD
+  if (/VENEZOLAN[AO]/.test(textoUpper)) {
+    res.nacionalidad = { texto: 'Venezolana', confianza: 97, valido: true, metodo: 'texto' };
+  } else if (/EXTRANJER[AO]/.test(textoUpper)) {
+    res.nacionalidad = { texto: 'Extranjera', confianza: 96, valido: true, metodo: 'texto' };
+  } else if (res.numero.texto.startsWith('V-')) {
+    res.nacionalidad = { texto: 'Venezolana', confianza: 88, valido: true, metodo: 'inferida-CI' };
+  } else if (res.numero.texto.startsWith('E-')) {
+    res.nacionalidad = { texto: 'Extranjera', confianza: 88, valido: true, metodo: 'inferida-CI' };
+  }
+
+  // 3. ANÁLISIS LÍNEA POR LÍNEA PARA APELLIDOS Y NOMBRES
+  let idxLineaApellidos = -1;
+  let idxLineaNombres = -1;
+
+  for (let i = 0; i < lineas.length; i++) {
+    const linea = lineas[i];
+    const lineaU = linea.toUpperCase();
+
+    // Etiqueta APELLIDOS (tolerante a APELL1DOS, APELLID0S, APELLIOOS)
+    if (!res.apellidos.valido && /APELL[I1L][DO0S]{2,4}/.test(lineaU)) {
+      idxLineaApellidos = i;
+      let resto = linea.replace(/.*APELL[I1L][DO0S]{2,4}[:\s.-]*/i, '').trim();
+      let candidato = limpiarNombrePropio(resto);
+      if (candidato.length < 3 && i + 1 < lineas.length) {
+        candidato = limpiarNombrePropio(lineas[i + 1]);
+      }
+      if (candidato.length >= 3) {
+        res.apellidos = { texto: candidato, confianza: 90, valido: true, metodo: 'etiqueta-línea' };
+      }
+    }
+
+    // Etiqueta NOMBRES (tolerante a N0MBRES, NOMBR3S, NQMBRES)
+    if (!res.nombres.valido && /N[O0Q]MBR[E3]S?/.test(lineaU)) {
+      idxLineaNombres = i;
+      let resto = linea.replace(/.*N[O0Q]MBR[E3]S?[:\s.-]*/i, '').trim();
+      let candidato = limpiarNombrePropio(resto);
+      if (candidato.length < 3 && i + 1 < lineas.length) {
+        candidato = limpiarNombrePropio(lineas[i + 1]);
+      }
+      if (candidato.length >= 3) {
+        res.nombres = { texto: candidato, confianza: 90, valido: true, metodo: 'etiqueta-línea' };
+      }
+    }
+  }
+
+  // Fallback posicional: si no leyó las etiquetas "APELLIDOS"/"NOMBRES" por desgaste del plástico,
+  // buscar las dos líneas consecutivas de texto puramente alfabético (en mayúsculas)
+  if (!res.apellidos.valido || !res.nombres.valido) {
+    const candidatosTexto = [];
+    for (let i = 0; i < lineas.length; i++) {
+      if (i === idxLineaApellidos || i === idxLineaNombres) continue;
+      const l = lineas[i];
+      // Ignorar líneas con muchos números (fechas, cédula)
+      const digitos = (l.match(/\d/g) || []).length;
+      if (digitos > 1) continue;
+      const limpio = limpiarNombrePropio(l);
+      if (limpio.length >= 4 && limpio.split(' ').length <= 4) {
+        candidatosTexto.push(limpio);
+      }
+    }
+    if (!res.apellidos.valido && candidatosTexto.length >= 1) {
+      res.apellidos = { texto: candidatosTexto[0], confianza: 74, valido: true, metodo: 'posicional' };
+    }
+    if (!res.nombres.valido && candidatosTexto.length >= 2) {
+      res.nombres = { texto: candidatosTexto[1], confianza: 74, valido: true, metodo: 'posicional' };
+    }
+  }
+
+  // 4. FECHA DE NACIMIENTO
+  const regexFechas = /\b([0-3]?\d)\s*[\/\-.]\s*([0-1]?\d)\s*[\/\-.]\s*((?:19|20)\d{2})\b/g;
+  let matchF;
+  const fechasEncontradas = [];
+  while ((matchF = regexFechas.exec(textoUpper)) !== null) {
+    const d = parseInt(matchF[1], 10);
+    const m = parseInt(matchF[2], 10);
+    const y = parseInt(matchF[3], 10);
+    if (d >= 1 && d <= 31 && m >= 1 && m <= 12 && y >= 1920 && y <= new Date().getFullYear()) {
+      const iso = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dt = new Date(iso);
+      if (!isNaN(dt.getTime())) {
+        fechasEncontradas.push({ iso, year: y });
+      }
+    }
+  }
+  if (fechasEncontradas.length > 0) {
+    fechasEncontradas.sort((a, b) => a.year - b.year);
+    res.fecha_nac = { texto: fechasEncontradas[0].iso, confianza: 94, valido: true, metodo: 'fecha-cronológica' };
+  }
+
+  // 5. ESTADO CIVIL
+  const matchEst = textoUpper.match(/\b(SOLTER[AO]|CASAD[AO]|DIVORCIAD[AO]|VIUD[AO]|CONCUBIN[AO])\b/);
+  if (matchEst) {
+    const base = matchEst[1];
+    let normalizado = '';
+    if (base.startsWith('SOLTER')) normalizado = 'Soltero(a)';
+    else if (base.startsWith('CASAD')) normalizado = 'Casado(a)';
+    else if (base.startsWith('DIVORCIAD')) normalizado = 'Divorciado(a)';
+    else if (base.startsWith('VIUD')) normalizado = 'Viudo(a)';
+    else if (base.startsWith('CONCUBIN')) normalizado = 'Concubino(a)';
+    res.estado_civil = { texto: normalizado, confianza: 94, valido: true, metodo: 'etiqueta' };
+  }
+
+  return res;
+}
+
+function fusionarResultados(resA, resB) {
+  const fusionado = {};
+  const campos = ['numero', 'apellidos', 'nombres', 'fecha_nac', 'estado_civil', 'nacionalidad'];
+  for (const c of campos) {
+    const a = resA[c];
+    const b = resB[c];
+    if (a.valido && !b.valido) fusionado[c] = a;
+    else if (!a.valido && b.valido) fusionado[c] = b;
+    else if (a.valido && b.valido) {
+      // Elegir el de mayor confianza o mayor longitud limpia en nombres/apellidos
+      if ((c === 'nombres' || c === 'apellidos') && b.texto.length > a.texto.length && b.confianza >= 80) {
+        fusionado[c] = b;
+      } else {
+        fusionado[c] = a.confianza >= b.confianza ? a : b;
+      }
+    } else {
+      fusionado[c] = a;
+    }
+  }
+  return fusionado;
+}
+
+// ==================== PIPELINE OCR PRINCIPAL (DOBLE PASADA SIN CONCURRENCIA) ====================
+async function procesarOCR() {
+  if (STATE.isProcessingOCR) {
+    showToast('Procesamiento en curso, por favor espera...', 'warn');
+    return;
+  }
+  if (!STATE.imagenCedula) {
+    showToast('Primero sube o fotografía la cédula', 'warn');
+    return;
+  }
+
+  STATE.isProcessingOCR = true;
+  $('btnProcesarOCR').disabled = true;
+  $('btnRotarCedula').disabled = true;
+  $('btnProcesarOCR').innerHTML = '<span class="spinner"></span> Analizando...';
+  $('ocrProgress').classList.add('active');
+  $('ocrLog').innerHTML = '';
+
+  const modoPreproc = $('selModoPreproc').value;
+
+  try {
+    log('📥 Cargando y estandarizando resolución...', 'info');
+    setProgress(10);
+    const img = await cargarImagen(STATE.imagenCedula);
+    const overlay = $('brushOverlay');
+    const usarPincel = STATE.hasBrushStrokes && overlay;
+
+    let cedulaBase = img;
+    let maskParaUsar = null;
+
+    if (usarPincel) {
+      log('🖌️ Usando selección manual pintada con el pincel...', 'success');
+      setProgress(25);
+      cedulaBase = normalizarTamano(img, 1500);
+      maskParaUsar = overlay;
+    } else {
+      log('📐 Detectando contorno de cédula automáticamente...', 'info');
+      setProgress(20);
+      const corners = detectarCedula(img);
+      if (corners) {
+        log('✅ Perspectiva corregida automáticamente', 'success');
+        cedulaBase = aplicarHomografia(img, corners);
+      } else {
+        cedulaBase = normalizarTamano(img, 1400);
+      }
+    }
+
+    log('✂️ Aislando texto y generando filtros anti-ruido...', 'info');
+    setProgress(30);
+    const variantes = generarVariantesPreprocesamiento(cedulaBase, modoPreproc, maskParaUsar);
+
+    // Mostrar la variante principal en la vista previa
+    $('cedulaProcessedPreview').innerHTML = '';
+    $('cedulaProcessedPreview').appendChild(variantes[0].canvas);
+
+    const worker = await obtenerWorkerTesseract();
+
+    // Pasada 1: Filtro Principal (CLAHE / Binarizado)
+    log(`📖 Pasada 1 (${variantes[0].nombre})...`, 'info');
+    setProgress(45);
+    const p1 = await worker.recognize(variantes[0].canvas);
+    const datos1 = extraerDatosCedulaVenezuela(p1.data.text || '');
+    const validos1 = Object.values(datos1).filter(r => r.valido).length;
+    log(`   ↳ Detectados ${validos1}/6 campos en Pasada 1`, validos1 >= 4 ? 'success' : 'info');
+
+    let resultadosFinales = datos1;
+    let textoLog = `--- PASADA 1 (${variantes[0].nombre}) ---\n${p1.data.text}`;
+
+    // Pasada 2: Si faltó algún campo importante, ejecutar segunda pasada en Grises Calibrados
+    if (validos1 < 5 && variantes.length > 1) {
+      log(`📖 Pasada 2 de respaldo (${variantes[1].nombre})...`, 'info');
+      setProgress(72);
+      const p2 = await worker.recognize(variantes[1].canvas);
+      const datos2 = extraerDatosCedulaVenezuela(p2.data.text || '');
+      resultadosFinales = fusionarResultados(datos1, datos2);
+      textoLog += `\n--- PASADA 2 (${variantes[1].nombre}) ---\n${p2.data.text}`;
+    }
+
+    $('rawTextArea').value = textoLog;
+    $('btnToggleRaw').style.display = 'inline-flex';
+
+    setProgress(95);
+    STATE.ocrResultados = resultadosFinales;
+    mostrarResultadosZonas(resultadosFinales);
+    autoRellenarFicha(resultadosFinales);
+    setProgress(100);
+
+    const totalValidos = Object.values(resultadosFinales).filter(r => r.valido).length;
+    log(`✅ Fusión completada: ${totalValidos}/6 campos extraídos limpiamente`, totalValidos >= 4 ? 'success' : 'warn');
+    showToast(`Extracción finalizada: ${totalValidos} de 6 campos`, totalValidos >= 4 ? 'success' : 'warn');
+
+  } catch (err) {
+    log('❌ Error en pipeline OCR: ' + err.message, 'error');
+    console.error(err);
+    showToast('Error al procesar OCR: ' + err.message, 'error');
+  } finally {
+    STATE.isProcessingOCR = false;
+    $('btnProcesarOCR').disabled = false;
+    $('btnRotarCedula').disabled = false;
+    $('btnProcesarOCR').innerHTML = '🔍 PROCESAR OCR EMPRESARIAL';
+  }
+}
+
+function setProgress(pct) {
+  $('progressFill').style.width = pct + '%';
+  $('progressFill').textContent = Math.round(pct) + '%';
+}
+
+function cargarImagen(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('No se pudo decodificar la imagen'));
+    img.src = dataUrl;
   });
 }
 
-function toggleOtroNegocio() {
-  const select = document.getElementById('f_negocio');
-  const otroInput = document.getElementById('f_negocioOtro');
-  if (select.value === 'OTRO') {
-    otroInput.classList.remove('hidden');
-  } else {
-    otroInput.classList.add('hidden');
-    otroInput.value = '';
+function mostrarResultadosZonas(resultados) {
+  for (const zona in resultados) {
+    const data = resultados[zona];
+    const zoneEl = document.querySelector('.ocr-zone [data-zone="' + zona + '"]');
+    if (!zoneEl) continue;
+    const parent = zoneEl.parentElement;
+    zoneEl.textContent = data.texto || '-';
+    const confEl = parent.querySelector('.ocr-zone-conf');
+    if (confEl) confEl.textContent = data.valido ? `Confianza: ${data.confianza}% (${data.metodo})` : 'No detectado';
+    parent.classList.remove('confidence-high','confidence-med','confidence-low','invalid');
+    if (!data.valido) parent.classList.add('invalid');
+    else if (data.confianza >= 80) parent.classList.add('confidence-high');
+    else if (data.confianza >= 60) parent.classList.add('confidence-med');
+    else parent.classList.add('confidence-low');
   }
 }
 
-function saveEmployee() {
-  const negocio = document.getElementById('f_negocio').value === 'OTRO' 
-    ? document.getElementById('f_negocioOtro').value 
-    : document.getElementById('f_negocio').value;
+function autoRellenarFicha(resultados) {
+  const campos = {
+    numero: {id:'fCedula', hint:'hCedula'},
+    apellidos: {id:'fApellidos'},
+    nombres: {id:'fNombres'},
+    fecha_nac: {id:'fFechaNac'},
+    estado_civil: {id:'fEstadoCivil'},
+    nacionalidad: {id:'fNacionalidad'}
+  };
+  for (const zona in resultados) {
+    const data = resultados[zona];
+    const cfg = campos[zona];
+    if (!cfg) continue;
+    const el = $(cfg.id);
+    if (!el) continue;
 
-  const emp = {
-    id: Date.now(),
-    codigo: state.currentCode,
-    fecha: new Date().toISOString(),
-    foto: state.empPhoto,
-    cedula: state.croppedDoc || state.docImage,
-    datos: {
-      cedula: document.getElementById('f_cedula').value,
-      apellidos: document.getElementById('f_apellidos').value,
-      nombres: document.getElementById('f_nombres').value,
-      nacimiento: document.getElementById('f_nacimiento').value,
-      estadoCivil: document.getElementById('f_estadoCivil').value,
-      nacionalidad: document.getElementById('f_nacionalidad').value,
-      negocio, fechaEntrevista: document.getElementById('f_fechaEntrevista').value,
-      telefono: document.getElementById('f_telefono').value,
-      direccion: document.getElementById('f_direccion').value,
-      requisito: document.getElementById('f_requisito').value,
-      observaciones: document.getElementById('f_observaciones').value
+    // Solo sobrescribir si el OCR encontró un dato válido
+    if (data.valido && data.texto) {
+      el.value = data.texto;
     }
-  };
 
-  if (!emp.datos.nombres || !emp.datos.apellidos) {
-    if (!confirm('⚠️ Los campos de Nombres y Apellidos están vacíos. ¿Guardar de todos modos?')) return;
+    el.classList.remove('field-high','field-med','field-low');
+    if (data.confianza >= 80 && data.valido) el.classList.add('field-high');
+    else if (data.confianza >= 60 && data.valido) el.classList.add('field-med');
+    else el.classList.add('field-low');
+
+    if (zona === 'numero' && cfg.hint) {
+      const hint = $(cfg.hint);
+      if (!data.valido) { hint.textContent = '⚠️ Verifica o ingresa manualmente'; hint.className = 'field-hint hint-err'; }
+      else { hint.textContent = '✅ Detectado (' + data.metodo + ')'; hint.className = 'field-hint'; }
+    }
   }
-
-  state.employees.push(emp);
-  try {
-    localStorage.setItem('fichas_entrevista', JSON.stringify(state.employees));
-  } catch(e) {
-    alert('⚠️ Almacenamiento lleno.');
-    state.employees.pop();
-    return;
-  }
-  
-  alert(`✅ Ficha guardada!\nCódigo: ${emp.codigo}`);
-  renderEmployeeList();
-  generateNewCode();
 }
 
-function renderEmployeeList() {
-  const list = document.getElementById('empList');
-  if (!list) return;
-  const valid = state.employees.filter(e => e && e.datos);
-  document.getElementById('empCount').textContent = valid.length;
-  if (valid.length === 0) {
-    list.innerHTML = '<p style="text-align:center; color:#9ca3af; padding:20px;">No hay fichas registradas.</p>';
-    return;
-  }
-  list.innerHTML = valid.map(e => `
-    <div class="employee-card">
-      <img src="${e.foto || 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><rect width=%2260%22 height=%2260%22 fill=%22%23d1d5db%22/></svg>'}" alt="">
-      <div class="employee-info">
-        <strong>${e.datos.nombres || ''} ${e.datos.apellidos || ''}</strong>
-        <small>🪪 ${e.datos.cedula || 'N/A'} | 🏢 ${e.datos.negocio || 'N/A'} | 📅 ${e.datos.fechaEntrevista || 'N/A'}</small>
-        <span class="emp-code">${e.codigo}</span>
-      </div>
-      <button class="btn btn-primary" onclick="showPreviewById(${e.id})">👁️</button>
-      <button class="btn btn-danger" onclick="deleteEmp(${e.id})">🗑️</button>
-    </div>
-  `).join('');
-}
+$('btnProcesarOCR').onclick = procesarOCR;
 
-function deleteEmp(id) {
-  if (!confirm('¿Eliminar esta ficha?')) return;
-  state.employees = state.employees.filter(e => e.id !== id);
-  localStorage.setItem('fichas_entrevista', JSON.stringify(state.employees));
-  renderEmployeeList();
-}
+$('btnToggleRaw').onclick = () => {
+  const box = $('rawTextBox');
+  box.style.display = box.style.display === 'block' ? 'none' : 'block';
+};
 
-function clearForm() {
-  if (!confirm('¿Limpiar todos los campos?')) return;
-  document.querySelectorAll('input, textarea').forEach(el => { if (el.type !== 'file') el.value = ''; });
-  document.getElementById('f_nacionalidad').value = 'Venezolana';
-  document.getElementById('f_fechaEntrevista').value = new Date().toISOString().split('T')[0];
-  state.empPhoto = null; state.docImage = null; state.croppedDoc = null;
-  document.getElementById('empImageArea').innerHTML = '<div class="placeholder"><span>👤</span><p>La foto del empleado aparecerá aquí</p></div>';
-  document.getElementById('docImageArea').innerHTML = '<div class="placeholder"><span>🪪</span><p>Sube o fotografía la cédula</p></div>';
-  document.getElementById('ocrRawText').value = '';
-  document.getElementById('ocrStatus').textContent = 'Esperando cédula...';
-  document.getElementById('ocrProgress').style.width = '0%';
-  document.getElementById('roiPreview').classList.add('hidden');
-  document.getElementById('btnClearEmp').classList.add('hidden');
-  generateNewCode();
-}
+$('btnNuevoCodigo').onclick = () => {
+  STATE.codigoUnico = generarCodigo();
+  $('codigoUnico').textContent = STATE.codigoUnico;
+  showToast('Nuevo código generado: ' + STATE.codigoUnico, 'info', 2000);
+};
 
-function exportPDF() {
-  const data = getFormData();
-  generatePreviewHTML(data, state.empPhoto, state.croppedDoc || state.docImage);
-}
-
-function showPreviewById(id) {
-  const record = state.employees.find(e => e.id === id);
-  if (!record) return;
-  generatePreviewHTML(record.datos, record.foto, record.cedula, record.codigo);
-}
-
-function getFormData() {
-  const negocio = document.getElementById('f_negocio').value === 'OTRO' 
-    ? document.getElementById('f_negocioOtro').value 
-    : document.getElementById('f_negocio').value;
+// ==================== GESTIÓN DE FICHAS ====================
+function obtenerDatos() {
   return {
-    cedula: document.getElementById('f_cedula').value,
-    apellidos: document.getElementById('f_apellidos').value,
-    nombres: document.getElementById('f_nombres').value,
-    nacimiento: document.getElementById('f_nacimiento').value,
-    estadoCivil: document.getElementById('f_estadoCivil').value,
-    nacionalidad: document.getElementById('f_nacionalidad').value,
-    negocio, fechaEntrevista: document.getElementById('f_fechaEntrevista').value,
-    telefono: document.getElementById('f_telefono').value,
-    direccion: document.getElementById('f_direccion').value,
-    requisito: document.getElementById('f_requisito').value,
-    observaciones: document.getElementById('f_observaciones').value
+    codigo: STATE.codigoUnico,
+    foto: STATE.fotoEmpleado,
+    imagenCedula: STATE.imagenCedula,
+    cedula: $('fCedula').value.trim(),
+    apellidos: $('fApellidos').value.trim(),
+    nombres: $('fNombres').value.trim(),
+    fechaNac: $('fFechaNac').value,
+    estadoCivil: $('fEstadoCivil').value,
+    nacionalidad: $('fNacionalidad').value,
+    empresa: $('fEmpresa').value,
+    fechaEnt: $('fFechaEnt').value,
+    telefono: $('fTelefono').value.trim(),
+    requisito: $('fRequisito').value,
+    direccion: $('fDireccion').value.trim(),
+    observaciones: $('fObservaciones').value.trim(),
+    timestamp: new Date().toISOString()
   };
 }
 
-function generatePreviewHTML(data, foto, cedula, codigo = state.currentCode) {
-  const content = `
-    <div style="font-family: Arial, sans-serif; padding: 20px; color: #1f2937;">
-      <div style="text-align: center; border-bottom: 3px solid #1e3a8a; padding-bottom: 15px; margin-bottom: 20px;">
-        <h1 style="color: #1e3a8a; margin: 0;">FICHA DE ENTREVISTA</h1>
-        <p style="color: #6b7280; margin: 5px 0;">Sistema de Gestión de Personal</p>
-        <p style="background: #fef3c7; padding: 8px; border-radius: 6px; display: inline-block; margin-top: 10px;">
-          <strong>Código:</strong> <code style="font-size: 1.1em; color: #1e3a8a;">${codigo}</code>
-        </p>
-      </div>
-      <div style="display: flex; gap: 20px; margin-bottom: 25px; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 200px;">
-          <h3 style="color: #1e3a8a; border-bottom: 2px solid #3b82f6; padding-bottom: 5px;">📸 Foto del Entrevistado</h3>
-          ${foto ? `<img src="${foto}" style="width: 100%; max-width: 200px; border: 2px solid #d1d5db; border-radius: 8px;">` : '<p style="color: #9ca3af;">Sin foto</p>'}
-        </div>
-        <div style="flex: 1; min-width: 200px;">
-          <h3 style="color: #1e3a8a; border-bottom: 2px solid #3b82f6; padding-bottom: 5px;">🪪 Documento de Identidad</h3>
-          ${cedula ? `<img src="${cedula}" style="width: 100%; max-width: 300px; border: 2px solid #d1d5db; border-radius: 8px;">` : '<p style="color: #9ca3af;">Sin documento</p>'}
-        </div>
-      </div>
-      <h3 style="color: #1e3a8a; border-bottom: 2px solid #059669; padding-bottom: 5px; margin-top: 20px;">🤖 Datos de Identificación</h3>
-      <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-        <tr><td style="padding: 8px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: bold; width: 30%;">N° Cédula:</td><td style="padding: 8px; border: 1px solid #d1d5db;">${data.cedula || 'N/A'}</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: bold;">Apellidos:</td><td style="padding: 8px; border: 1px solid #d1d5db;">${data.apellidos || 'N/A'}</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: bold;">Nombres:</td><td style="padding: 8px; border: 1px solid #d1d5db;">${data.nombres || 'N/A'}</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: bold;">Fecha de Nacimiento:</td><td style="padding: 8px; border: 1px solid #d1d5db;">${data.nacimiento || 'N/A'}</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: bold;">Estado Civil:</td><td style="padding: 8px; border: 1px solid #d1d5db;">${data.estadoCivil || 'N/A'}</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: bold;">Nacionalidad:</td><td style="padding: 8px; border: 1px solid #d1d5db;">${data.nacionalidad || 'N/A'}</td></tr>
-      </table>
-      <h3 style="color: #1e3a8a; border-bottom: 2px solid #d97706; padding-bottom: 5px; margin-top: 20px;">✍️ Datos de la Entrevista</h3>
-      <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-        <tr><td style="padding: 8px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: bold; width: 30%;">Negocio:</td><td style="padding: 8px; border: 1px solid #d1d5db;">${data.negocio || 'N/A'}</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: bold;">Fecha Entrevista:</td><td style="padding: 8px; border: 1px solid #d1d5db;">${data.fechaEntrevista || 'N/A'}</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: bold;">Teléfono:</td><td style="padding: 8px; border: 1px solid #d1d5db;">${data.telefono || 'N/A'}</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: bold;">Requisito Ingreso:</td><td style="padding: 8px; border: 1px solid #d1d5db;">${data.requisito === 'SI' ? '✅ Sí' : data.requisito === 'NO' ? '❌ No' : 'N/A'}</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: bold; vertical-align: top;">Dirección:</td><td style="padding: 8px; border: 1px solid #d1d5db;">${data.direccion || 'N/A'}</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #d1d5db; background: #f3f4f6; font-weight: bold; vertical-align: top;">Observaciones:</td><td style="padding: 8px; border: 1px solid #d1d5db;">${data.observaciones || 'N/A'}</td></tr>
-      </table>
-      <div style="margin-top: 40px; text-align: center; font-size: 0.85em; color: #6b7280; border-top: 2px solid #d1d5db; padding-top: 15px;">
-        <p><strong>Generada:</strong> ${new Date().toLocaleString('es-VE')}</p>
-        <p>Antonio Altuna | 2026 | 0412-7294298 | altuna.g1@gmail.com</p>
-      </div>
-    </div>
-  `;
-  document.getElementById('previewBody').innerHTML = content;
-  document.getElementById('previewModal').classList.add('active');
-}
+$('btnGuardar').onclick = () => {
+  const datos = obtenerDatos();
+  if (!datos.cedula || !datos.nombres || !datos.apellidos) {
+    showToast('Completa al menos Cédula, Nombres y Apellidos', 'warn');
+    return;
+  }
+  STATE.fichas.push(datos);
+  localStorage.setItem('fichas_v11', JSON.stringify(STATE.fichas));
+  renderFichas();
+  showToast('✅ Ficha guardada: ' + datos.codigo, 'success');
+};
 
-function closePreview() {
-  document.getElementById('previewModal').classList.remove('active');
-}
+$('btnPDF').onclick = async () => {
+  const datos = obtenerDatos();
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF();
 
-function exportJSON() {
-  const data = getFormData();
-  const exportData = {
-    codigo: state.currentCode,
-    fechaExportacion: new Date().toISOString(),
-    foto: state.empPhoto,
-    cedula: state.croppedDoc || state.docImage,
-    datos: data
-  };
-  const blob = new Blob([JSON.stringify(exportData, null, 2)], {type:'application/json'});
+  // Encabezado
+  doc.setFillColor(26, 84, 144);
+  doc.rect(0, 0, 210, 28, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.text('FICHA DE ENTREVISTA', 105, 13, {align:'center'});
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  doc.text('Codigo: ' + datos.codigo, 105, 21, {align:'center'});
+
+  doc.setTextColor(0, 0, 0);
+  let y = 40;
+
+  // Foto del entrevistado (esquina superior derecha con marco)
+  if (datos.foto) {
+    try {
+      const fmtFoto = datos.foto.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+      doc.setDrawColor(200, 200, 200);
+      doc.rect(152, 34, 42, 52);
+      doc.addImage(datos.foto, fmtFoto, 153, 35, 40, 50);
+    } catch(e) {
+      console.warn('Error agregando foto al PDF:', e);
+    }
+  } else {
+    doc.setDrawColor(200, 200, 200);
+    doc.rect(152, 34, 42, 52);
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text('Sin Foto', 173, 61, {align:'center'});
+    doc.setTextColor(0);
+  }
+
+  // Datos Personales
+  doc.setFontSize(12); doc.setFont(undefined, 'bold');
+  doc.setTextColor(26, 84, 144);
+  doc.text('DATOS PERSONALES', 15, y); y += 8;
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(10);
+
+  const campos = [
+    ['Cedula:', datos.cedula],
+    ['Apellidos:', datos.apellidos],
+    ['Nombres:', datos.nombres],
+    ['Fecha Nac:', datos.fechaNac],
+    ['Estado Civil:', datos.estadoCivil],
+    ['Nacionalidad:', datos.nacionalidad]
+  ];
+  campos.forEach(p => {
+    doc.setFont(undefined, 'bold'); doc.text(p[0], 15, y);
+    doc.setFont(undefined, 'normal'); doc.text(String(p[1]||'-'), 55, y);
+    y += 6.5;
+  });
+
+  y = Math.max(y + 6, 94);
+
+  // Datos de Entrevista
+  doc.setFontSize(12); doc.setFont(undefined, 'bold');
+  doc.setTextColor(26, 84, 144);
+  doc.text('DATOS DE LA ENTREVISTA', 15, y); y += 8;
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(10);
+
+  const campos2 = [
+    ['Empresa:', datos.empresa],
+    ['Fecha:', datos.fechaEnt],
+    ['Telefono:', datos.telefono],
+    ['Cumple Req.:', datos.requisito],
+    ['Direccion:', datos.direccion]
+  ];
+  campos2.forEach(p => {
+    doc.setFont(undefined, 'bold'); doc.text(p[0], 15, y);
+    doc.setFont(undefined, 'normal');
+    const lines = doc.splitTextToSize(String(p[1]||'-'), 135);
+    doc.text(lines, 55, y);
+    y += Math.max(6.5, lines.length * 5.5);
+  });
+
+  y += 3;
+  doc.setFont(undefined, 'bold'); doc.text('Observaciones:', 15, y); y += 5.5;
+  doc.setFont(undefined, 'normal');
+  const obs = doc.splitTextToSize(datos.observaciones || '-', 180);
+  doc.text(obs, 15, y);
+  y += obs.length * 5.5 + 8;
+
+  // Imagen de la Cédula de Identidad
+  if (datos.imagenCedula) {
+    try {
+      const imgCed = await cargarImagen(datos.imagenCedula);
+      const maxW = 120;
+      const maxH = 76;
+      const ratio = Math.min(maxW / imgCed.width, maxH / imgCed.height);
+      const drawW = imgCed.width * ratio;
+      const drawH = imgCed.height * ratio;
+
+      // Si no cabe en la página actual, saltar de página
+      if (y + drawH + 18 > 278) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setFontSize(11); doc.setFont(undefined, 'bold');
+      doc.setTextColor(26, 84, 144);
+      doc.text('DOCUMENTO DE IDENTIDAD (CEDULA)', 15, y);
+      y += 5;
+
+      const xPos = (210 - drawW) / 2;
+      doc.setDrawColor(180, 180, 180);
+      doc.rect(xPos - 1, y - 1, drawW + 2, drawH + 2);
+      const fmtCed = datos.imagenCedula.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+      doc.addImage(datos.imagenCedula, fmtCed, xPos, y, drawW, drawH);
+    } catch (e) {
+      console.warn('Error agregando imagen de cédula al PDF:', e);
+    }
+  }
+
+  doc.setFontSize(8); doc.setTextColor(110);
+  doc.text('Generado: ' + new Date().toLocaleString('es-VE') + ' | Antonio Altuna OCR PRO v12.0', 105, 288, {align:'center'});
+  doc.save('Ficha_' + datos.codigo + '.pdf');
+  showToast('PDF generado con foto y cédula', 'success');
+};
+
+$('btnJSON').onclick = () => {
+  const datos = obtenerDatos();
+  const blob = new Blob([JSON.stringify(datos, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `ficha_${state.currentCode}_${Date.now()}.json`;
+  a.href = url; a.download = 'Ficha_' + datos.codigo + '.json';
   a.click();
+  URL.revokeObjectURL(url);
+};
+
+$('btnLimpiarForm').onclick = () => {
+  showModal('Limpiar Formulario', '¿Estás seguro de que deseas borrar todos los campos actuales para iniciar una nueva entrevista?', [
+    { text: 'Cancelar', cls: 'btn-secondary' },
+    { text: 'Sí, limpiar', cls: 'btn-danger', onClick: () => {
+      ['fCedula','fApellidos','fNombres','fFechaNac','fTelefono','fDireccion','fObservaciones'].forEach(id => {
+        $(id).value = '';
+        $(id).classList.remove('field-high','field-med','field-low');
+      });
+      ['fEstadoCivil','fNacionalidad','fEmpresa','fRequisito'].forEach(id => {
+        $(id).value = '';
+        $(id).classList.remove('field-high','field-med','field-low');
+      });
+      $('fFechaEnt').value = new Date().toISOString().slice(0,10);
+      STATE.codigoUnico = generarCodigo();
+      $('codigoUnico').textContent = STATE.codigoUnico;
+      STATE.ocrResultados = {};
+      document.querySelectorAll('.ocr-zone-value').forEach(el => el.textContent = '-');
+      document.querySelectorAll('.ocr-zone-conf').forEach(el => el.textContent = '-');
+      document.querySelectorAll('.ocr-zone').forEach(el => el.classList.remove('confidence-high','confidence-med','confidence-low','invalid'));
+      showToast('Formulario reiniciado', 'info');
+    }}
+  ]);
+};
+
+function renderFichas() {
+  $('totalFichas').textContent = STATE.fichas.length;
+  const lista = $('fichasLista');
+  lista.innerHTML = '';
+  if (STATE.fichas.length === 0) {
+    lista.innerHTML = '<p style="color:#64748b;text-align:center;padding:20px">No hay fichas guardadas aún</p>';
+    return;
+  }
+  STATE.fichas.slice().reverse().forEach((f, i) => {
+    const idx = STATE.fichas.length - 1 - i;
+    const div = document.createElement('div');
+    div.className = 'ficha-item';
+    div.innerHTML = `
+      <div class="ficha-item-info">
+        <strong>${f.codigo}</strong> — ${f.nombres} ${f.apellidos}
+        <small>CI: ${f.cedula} | ${f.empresa || 'Sin empresa'} | Fecha: ${f.fechaEnt}</small>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary" onclick="verFicha(${idx})" style="padding:6px 10px;font-size:.8em">👁️ Ver</button>
+        <button class="btn btn-danger" onclick="eliminarFicha(${idx})" style="padding:6px 10px;font-size:.8em">🗑️</button>
+      </div>`;
+    lista.appendChild(div);
+  });
 }
 
-renderEmployeeList();
-window.addEventListener('resize', () => {
-  if (!document.getElementById('cropTool').classList.contains('hidden')) updateHandles();
-});
+window.verFicha = idx => {
+  const f = STATE.fichas[idx];
+  const detalle = `Código: ${f.codigo}\nCédula: ${f.cedula}\nNombres: ${f.nombres}\nApellidos: ${f.apellidos}\nFecha Nac: ${f.fechaNac || '-'}\nEstado Civil: ${f.estadoCivil || '-'}\nNacionalidad: ${f.nacionalidad || '-'}\nEmpresa: ${f.empresa || '-'}\nFecha Entrevista: ${f.fechaEnt || '-'}\nTeléfono: ${f.telefono || '-'}\nCumple Requisito: ${f.requisito || '-'}\nDirección: ${f.direccion || '-'}\nObservaciones: ${f.observaciones || '-'}`;
+  showModal('Detalle de Ficha', detalle, [{ text: 'Cerrar', cls: 'btn-primary' }]);
+};
+
+window.eliminarFicha = idx => {
+  showModal('Eliminar Ficha', '¿Deseas eliminar permanentemente este registro?', [
+    { text: 'Cancelar', cls: 'btn-secondary' },
+    { text: 'Eliminar', cls: 'btn-danger', onClick: () => {
+      STATE.fichas.splice(idx, 1);
+      localStorage.setItem('fichas_v11', JSON.stringify(STATE.fichas));
+      renderFichas();
+      showToast('Ficha eliminada', 'info');
+    }}
+  ]);
+};
+
+$('btnImprimirTodo').onclick = () => {
+  if (STATE.fichas.length === 0) { showToast('No hay fichas para imprimir', 'warn'); return; }
+  const win = window.open('', '_blank');
+  let html = '<html><head><title>Reporte de Fichas</title><style>body{font-family:Arial,sans-serif;padding:20px}.ficha{border:1px solid #ccc;padding:15px;margin:10px 0;page-break-inside:avoid;border-radius:6px}h2{color:#1a5490;margin-top:0}</style></head><body>';
+  html += '<h1>Reporte de Entrevistas (' + STATE.fichas.length + ')</h1>';
+  STATE.fichas.forEach(f => {
+    html += '<div class="ficha"><h2>' + f.codigo + '</h2><p><b>Nombre:</b> ' + f.nombres + ' ' + f.apellidos + '</p><p><b>CI:</b> ' + f.cedula + ' | <b>Nac:</b> ' + (f.fechaNac||'-') + ' | <b>EC:</b> ' + (f.estadoCivil||'-') + '</p><p><b>Empresa:</b> ' + (f.empresa||'-') + ' | <b>Fecha:</b> ' + (f.fechaEnt||'-') + '</p><p><b>Tel:</b> ' + (f.telefono||'-') + ' | <b>Req:</b> ' + (f.requisito||'-') + '</p><p><b>Dir:</b> ' + (f.direccion||'-') + '</p><p><b>Obs:</b> ' + (f.observaciones||'-') + '</p></div>';
+  });
+  html += '</body></html>';
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 400);
+};
 </script>
 </body>
 </html>
