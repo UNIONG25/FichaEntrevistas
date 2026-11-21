@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OCR Studio PRO v14.0 | Antonio Altuna 2026</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<title>OCR Studio PRO v17.0 | Antonio Altuna 2026</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
 <script src="https://docs.opencv.org/4.8.0/opencv.js" async></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -989,121 +990,215 @@ function detectarSellosYLogosColor(canvasDoc) {
 }
 
 /**
- * Pipeline completo de digitalización documental v16:
- * - Endereza inclinación leve sin deformar la hoja por tablas internas
- * - Extrae PALABRAS individuales (words) con coordenadas exactas para separar columnas de tablas
- * - Reconstruye celdas, filas, párrafos y encabezados limpios
+ * Detecta las 4 esquinas exteriores del documento o cédula usando OpenCV
+ * para corregir perspectiva sin deformar el contenido interno.
  */
-$('btnDocProcesar').onclick = async () => {
-  if (STATE.isProcessingOCR || !STATE.docImageRaw) return;
-  STATE.isProcessingOCR = true;
-  $('btnDocProcesar').disabled = true;
-  $('btnRotarCedula').disabled = true;
-  $('btnDocProcesar').innerHTML = '<span class="spinner"></span> Reconstruyendo...';
-  $('docProgress').classList.add('active');
-  $('docLog').innerHTML = '';
-
+function detectarBordesDocumentoGeneral(sourceElement) {
+  if (typeof cv === 'undefined' || !cv.Mat) return null;
+  let src, gray, blurred, edged, kernel, closed, contours, hierarchy, bestApprox;
   try {
-    docLog('📥 Cargando documento...', 'info');
-    setDocProgress(10);
-    const img = await cargarImagen(STATE.docImageRaw);
+    const temp = normalizarTamano(sourceElement, 900);
+    const scaleBack = (sourceElement.naturalWidth || sourceElement.width) / temp.width;
 
-    let canvasDoc = normalizarTamano(img, 1400);
-    if ($('chkAutoCropDoc').checked) {
-      const corners = detectarBordesDocumentoGeneral(img);
-      if (corners) {
-        docLog('✅ Borde exterior de hoja rectificado', 'success');
-        canvasDoc = rectificarDocumentoPerspectiva(img, corners);
-      } else {
-        docLog('📐 Nivelando horizontalidad del documento...', 'info');
-        canvasDoc = autoEnderezarInclinacion(canvasDoc);
+    src = cv.imread(temp);
+    gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+    blurred = new cv.Mat();
+    cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0);
+
+    edged = new cv.Mat();
+    cv.Canny(blurred, edged, 50, 150);
+
+    kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(7, 7));
+    closed = new cv.Mat();
+    cv.morphologyEx(edged, closed, cv.MORPH_CLOSE, kernel);
+
+    contours = new cv.MatVector();
+    hierarchy = new cv.Mat();
+    cv.findContours(closed, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+    const imgArea = src.cols * src.rows;
+    let maxArea = 0;
+
+    for (let i = 0; i < contours.size(); i++) {
+      const cnt = contours.get(i);
+      const area = cv.contourArea(cnt);
+      if (area > imgArea * 0.25 && area < imgArea * 0.96) {
+        const peri = cv.arcLength(cnt, true);
+        const approx = new cv.Mat();
+        cv.approxPolyDP(cnt, approx, 0.025 * peri, true);
+        if (approx.rows === 4 && area > maxArea && cv.isContourConvex(approx)) {
+          if (bestApprox) bestApprox.delete();
+          bestApprox = approx;
+          maxArea = area;
+        } else {
+          approx.delete();
+        }
       }
-    } else {
-      canvasDoc = autoEnderezarInclinacion(canvasDoc);
+      cnt.delete();
     }
 
-    STATE.docRectifiedCanvas = canvasDoc;
-    $('docOriginalStage').innerHTML = '';
-    $('docOriginalStage').appendChild(canvasDoc);
-    $('docDimBadge').textContent = `${canvasDoc.width} × ${canvasDoc.height} px`;
-    setDocProgress(28);
+    if (!bestApprox) return null;
 
-    // Escala de grises de alto contraste para lectura nítida de tablas y números
-    const cGris = document.createElement('canvas');
-    cGris.width = canvasDoc.width;
-    cGris.height = canvasDoc.height;
-    const ctxG = cGris.getContext('2d');
-    ctxG.filter = 'grayscale(100%) contrast(135%) brightness(104%)';
-    ctxG.drawImage(canvasDoc, 0, 0);
-
-    const worker = await obtenerWorkerTesseract(Tesseract.PSM.AUTO, 'doc');
-    docLog('🧠 Extrayendo palabras y coordenadas espaciales...', 'info');
-    const result = await worker.recognize(cGris);
-    setDocProgress(82);
-
-    const wordBlocks = [];
-    const palabras = result.data.words || [];
-
-    for (let i = 0; i < palabras.length; i++) {
-      const wObj = palabras[i];
-      const txt = (wObj.text || '').trim();
-      // Filtrar ruido gráfico de bordes/líneas de tabla
-      if (!txt) continue;
-      if (/^[|\\/_\-=+*•·.,:;()[\]{}«»"'<>~^`´]+$/.test(txt)) continue;
-      if (wObj.confidence < 35 && txt.length <= 2) continue;
-
-      const bbox = wObj.bbox;
-      const boxH = Math.max(8, bbox.y1 - bbox.y0);
-      const boxW = Math.max(6, bbox.x1 - bbox.x0);
-      const fontSize = Math.max(10, Math.min(36, Math.round(boxH * 0.78)));
-
-      wordBlocks.push({
-        id: 'w_' + i,
-        text: txt,
-        x: bbox.x0,
-        y: bbox.y0,
-        yCenter: (bbox.y0 + bbox.y1) / 2,
-        w: boxW,
-        h: boxH,
-        fontSize,
-        bold: txt === txt.toUpperCase() && /[A-ZÁÉÍÓÚÑ]{3,}/.test(txt)
+    const pts = [];
+    for (let i = 0; i < 4; i++) {
+      pts.push({
+        x: bestApprox.data32S[i * 2] * scaleBack,
+        y: bestApprox.data32S[i * 2 + 1] * scaleBack
       });
     }
+    bestApprox.delete();
 
-    docLog(`✅ ${wordBlocks.length} palabras reconocidas con coordenadas exactas`, 'success');
-    docLog('🖼️ Identificando logos, sellos y gráficos...', 'info');
-    setDocProgress(90);
+    // Ordenar puntos: top-left, top-right, bottom-right, bottom-left
+    pts.sort((a, b) => (a.x + a.y) - (b.x + b.y));
+    const tl = pts[0];
+    const br = pts[3];
+    const rem = [pts[1], pts[2]].sort((a, b) => (b.x - b.y) - (a.x - a.y));
+    const tr = rem[0];
+    const bl = rem[1];
 
-    const graphicBlocks = detectarElementosGraficos(canvasDoc, wordBlocks);
-    docLog(`✅ ${graphicBlocks.length} elementos gráficos preservados`, 'success');
-
-    const sections = construirEstructuraOrdenada(canvasDoc.width, canvasDoc.height, wordBlocks, graphicBlocks);
-    docLog(`📐 Documento reconstruido en ${sections.length} secciones ordenadas`, 'success');
-
-    STATE.docLayout = {
-      width: canvasDoc.width,
-      height: canvasDoc.height,
-      sections,
-      textBlocks: wordBlocks,
-      graphicBlocks
-    };
-
-    renderizarDocumentoEditable();
-    habilitarBotonesExportacionDoc(true);
-    setDocProgress(100);
-    showToast(`Documento estructurado: ${sections.length} bloques limpios`, 'success');
-
-  } catch (err) {
-    docLog('❌ Error procesando documento: ' + err.message, 'error');
-    console.error(err);
-    showToast('Error al convertir documento: ' + err.message, 'error');
+    return [tl, tr, br, bl];
+  } catch (e) {
+    return null;
   } finally {
-    STATE.isProcessingOCR = false;
-    $('btnDocProcesar').disabled = false;
-    $('btnDocRotar').disabled = false;
-    $('btnDocProcesar').innerHTML = '✨ CONVERTIR A DOCUMENTO EDITABLE';
+    if (src) src.delete();
+    if (gray) gray.delete();
+    if (blurred) blurred.delete();
+    if (edged) edged.delete();
+    if (kernel) kernel.delete();
+    if (closed) closed.delete();
+    if (contours) contours.delete();
+    if (hierarchy) hierarchy.delete();
   }
-};
+}
+
+/**
+ * Aplica transformación de perspectiva de 4 puntos para enderezar la hoja o cédula.
+ */
+function rectificarDocumentoPerspectiva(sourceElement, corners) {
+  if (typeof cv === 'undefined' || !cv.Mat || !corners || corners.length !== 4) {
+    return normalizarTamano(sourceElement, 1450);
+  }
+  let src, srcTri, dstTri, M, dst;
+  try {
+    const rawCanvas = document.createElement('canvas');
+    rawCanvas.width = sourceElement.naturalWidth || sourceElement.width;
+    rawCanvas.height = sourceElement.naturalHeight || sourceElement.height;
+    rawCanvas.getContext('2d').drawImage(sourceElement, 0, 0);
+
+    const [tl, tr, br, bl] = corners;
+    const widthA = Math.hypot(br.x - bl.x, br.y - bl.y);
+    const widthB = Math.hypot(tr.x - tl.x, tr.y - tl.y);
+    const maxW = Math.max(Math.round(widthA), Math.round(widthB), 300);
+
+    const heightA = Math.hypot(tr.x - br.x, tr.y - br.y);
+    const heightB = Math.hypot(tl.x - bl.x, tl.y - bl.y);
+    const maxH = Math.max(Math.round(heightA), Math.round(heightB), 300);
+
+    src = cv.imread(rawCanvas);
+    srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+      tl.x, tl.y,
+      tr.x, tr.y,
+      br.x, br.y,
+      bl.x, bl.y
+    ]);
+    dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+      0, 0,
+      maxW, 0,
+      maxW, maxH,
+      0, maxH
+    ]);
+
+    M = cv.getPerspectiveTransform(srcTri, dstTri);
+    dst = new cv.Mat();
+    cv.warpPerspective(src, dst, M, new cv.Size(maxW, maxH), cv.INTER_CUBIC, cv.BORDER_REPLICATE);
+
+    const out = document.createElement('canvas');
+    out.width = maxW;
+    out.height = maxH;
+    cv.imshow(out, dst);
+    return normalizarTamano(out, 1450);
+  } catch (e) {
+    return normalizarTamano(sourceElement, 1450);
+  } finally {
+    if (src) src.delete();
+    if (srcTri) srcTri.delete();
+    if (dstTri) dstTri.delete();
+    if (M) M.delete();
+    if (dst) dst.delete();
+  }
+}
+
+/**
+ * Detecta elementos gráficos no textuales (logos, sellos, códigos QR) excluyendo
+ * las cajas de palabras reconocidas por el OCR local.
+ */
+function detectarElementosGraficos(canvasDoc, wordBlocks) {
+  const graphics = [];
+  if (typeof cv === 'undefined' || !cv.Mat) return graphics;
+  let src, gray, inv, kernel, closed, contours, hierarchy;
+  try {
+    src = cv.imread(canvasDoc);
+    const W = src.cols;
+    const H = src.rows;
+    gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+    inv = new cv.Mat();
+    cv.threshold(gray, inv, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU);
+
+    kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(14, 14));
+    closed = new cv.Mat();
+    cv.morphologyEx(inv, closed, cv.MORPH_CLOSE, kernel);
+
+    contours = new cv.MatVector();
+    hierarchy = new cv.Mat();
+    cv.findContours(closed, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+    for (let i = 0; i < contours.size(); i++) {
+      const cnt = contours.get(i);
+      const rect = cv.boundingRect(cnt);
+      const area = rect.width * rect.height;
+
+      if (rect.width >= 55 && rect.height >= 45 && area < W * H * 0.30) {
+        // Verificar si contiene palabras de texto OCR para no duplicar texto como imagen
+        const palabrasDentro = wordBlocks.filter(w =>
+          w.x >= rect.x - 8 && (w.x + w.w) <= (rect.x + rect.width + 8) &&
+          w.y >= rect.y - 8 && (w.y + w.h) <= (rect.y + rect.height + 8)
+        );
+        if (palabrasDentro.length <= 1) {
+          const cropCanvas = document.createElement('canvas');
+          cropCanvas.width = rect.width;
+          cropCanvas.height = rect.height;
+          cropCanvas.getContext('2d').drawImage(canvasDoc, rect.x, rect.y, rect.width, rect.height, 0, 0, rect.width, rect.height);
+
+          graphics.push({
+            id: 'gfx_loc_' + i,
+            x: rect.x,
+            y: rect.y,
+            w: rect.width,
+            h: rect.height,
+            tipo: rect.y < H * 0.22 ? 'Logo / Membrete' : 'Sello / Gráfico',
+            dataUrl: cropCanvas.toDataURL('image/png')
+          });
+        }
+      }
+      cnt.delete();
+    }
+  } catch (e) {
+    console.warn('Error en detección gráfica local:', e);
+  } finally {
+    if (src) src.delete();
+    if (gray) gray.delete();
+    if (inv) inv.delete();
+    if (kernel) kernel.delete();
+    if (closed) closed.delete();
+    if (contours) contours.delete();
+    if (hierarchy) hierarchy.delete();
+  }
+  return graphics;
+}
 
 function habilitarBotonesExportacionDoc(estado) {
   $('btnExportWord').disabled = !estado;
