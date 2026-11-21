@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OCR Studio PRO v14.0 - Reconstrucción Documental & Cédula | Antonio Altuna 2026</title>
+<title>OCR Studio PRO v14.0 | Antonio Altuna 2026</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
 <script src="https://docs.opencv.org/4.8.0/opencv.js" async></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -220,8 +220,8 @@ h3{color:var(--primary-dark);margin:14px 0 10px;font-size:1.02em}
 
 <div class="container">
   <header>
-    <h1>⚡ OCR Studio PRO <span class="pro-badge">v16.0 ENTERPRISE</span></h1>
-    <p>Reconstrucción Tabular y Documental Estructurada + Cédula KYC</p>
+    <h1>⚡ OCR Studio PRO <span class="pro-badge">v17.0 IA VISION</span></h1>
+    <p>Reconocimiento Manuscrito e Impreso con IA + Reconstrucción Tabular y Cédula KYC</p>
     <div class="contact">
       <span>👤 Antonio Altuna</span>
       <span>📅 2026</span>
@@ -238,16 +238,26 @@ h3{color:var(--primary-dark);margin:14px 0 10px;font-size:1.02em}
   <!-- ==================== PESTAÑA 1: ESCÁNER DOCUMENTAL ==================== -->
   <div id="tab-doc" class="tab-content active">
     <section>
-      <h2>📄 Digitalización Inteligente y Reconstrucción Tabular</h2>
+      <h2>📄 Digitalización Inteligente (Impreso y Manuscrito a Pulso)</h2>
       <div class="btn-group">
         <button class="btn btn-primary" id="btnDocCamara">📷 Fotografiar Documento</button>
         <button class="btn btn-secondary" id="btnDocSubir">📁 Subir Imagen</button>
         <input type="file" id="inputDocImg" accept="image/*" style="display:none">
         <button class="btn btn-secondary" id="btnDocRotar" disabled>🔄 Rotar 90°</button>
+        <select id="selMotorDoc" style="padding:9px 12px;border-radius:8px;border:2px solid var(--accent);font-weight:700;color:#4c1d95;background:#f5f3ff;font-size:.86em">
+          <option value="gemini" selected>🧠 IA Vision PRO (Manuscrito, Cursiva y Tablas)</option>
+          <option value="local">⚙️ Motor Local Offline (Solo texto impreso)</option>
+        </select>
         <label style="display:inline-flex;align-items:center;gap:6px;font-size:.86em;font-weight:600;background:#f1f5f9;padding:8px 12px;border-radius:8px;border:1px solid #cbd5e1;cursor:pointer">
           <input type="checkbox" id="chkAutoCropDoc" checked> Recortar bordes exteriores
         </label>
         <button class="btn btn-success" id="btnDocProcesar" disabled>✨ CONVERTIR A DOCUMENTO EDITABLE</button>
+      </div>
+
+      <div id="boxApiKeyGemini" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#f5f3ff;border:1px solid #ddd6fe;padding:10px 14px;border-radius:10px;margin-top:8px">
+        <span style="font-size:.84em;font-weight:700;color:#5b21b6">🔑 Gemini API Key (Opcional si ya está configurada en el entorno):</span>
+        <input type="password" id="inputGeminiKey" placeholder="Dejar vacío para usar clave integrada o pegar AIzaSy..." style="flex:1;min-width:240px;padding:7px 10px;border:1px solid #c4b5fd;border-radius:6px;font-size:.84em">
+        <span style="font-size:.78em;color:#6d28d9">Lee cualquier letra hecha a pulso, cursiva, tachaduras y tablas complejas.</span>
       </div>
 
       <div class="ocr-progress" id="docProgress">
@@ -611,223 +621,325 @@ function setDocProgress(pct) {
 }
 
 /**
- * Calcula el ángulo interno (en grados) formado por el vértice B en el triángulo A-B-C
+ * Consulta la API de Gemini Vision (gemini-3-flash-preview) con salida estructurada JSON
+ * para transcribir documentos manuscritos (cualquier caligrafía a pulso), cursiva o impresos,
+ * preservando encabezados, párrafos y tablas exactas.
  */
-function calcularAnguloVertice(A, B, C) {
-  const ab = { x: A.x - B.x, y: A.y - B.y };
-  const cb = { x: C.x - B.x, y: C.y - B.y };
-  const dot = ab.x * cb.x + ab.y * cb.y;
-  const magAB = Math.hypot(ab.x, ab.y);
-  const magCB = Math.hypot(cb.x, cb.y);
-  if (magAB === 0 || magCB === 0) return 0;
-  const cos = Math.max(-1, Math.min(1, dot / (magAB * magCB)));
-  return Math.acos(cos) * (180 / Math.PI);
-}
+async function extraerEstructuraConGeminiVision(canvasDoc) {
+  const userKey = ($('inputGeminiKey').value || '').trim();
+  const apiKey = userKey || "";
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
-/**
- * Detecta exclusivamente el borde exterior real de la hoja física (área >= 65% de la imagen)
- * para evitar confundir tablas internas con los bordes del documento.
- */
-function detectarBordesDocumentoGeneral(imgElement) {
-  if (typeof cv === 'undefined' || !cv.Mat) return null;
-  let src, gray, blurred, morph, edges, dilated, contours, hierarchy;
-  try {
-    const small = normalizarTamano(imgElement, 900);
-    const scaleBack = (imgElement.naturalWidth || imgElement.width) / small.width;
+  // Comprimir en JPEG de alta nitidez (0.90) para transmisión rápida y máxima legibilidad de trazos finos
+  const base64Data = canvasDoc.toDataURL('image/jpeg', 0.90).split(',')[1];
 
-    src = cv.imread(small);
-    gray = new cv.Mat();
-    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  const systemPrompt = `Eres un motor OCR/ICR empresarial de máxima precisión especializado en transcripción documental y caligrafía manuscrita (letra hecha a pulso, cursiva, letra de molde, recetas, actas, apuntes y tablas).
+Analiza la imagen proporcionada y reconstruye fielmente todo su contenido textual respetando la jerarquía visual y la distribución original de columnas y filas.
+Reglas estrictas:
+1. Transcribe exactamente lo que dice el texto manuscrito o impreso, corrigiendo únicamente ambigüedades evidentes por contexto lingüístico sin inventar datos.
+2. Si hay tablas, listas tabulares, facturas o cuadros con columnas, usa el tipo "table" y llena "rows" como una matriz bidimensional donde todas las filas tengan exactamente el mismo número de columnas.
+3. Si la primera fila de la tabla corresponde a encabezados de columna, marca "hasHeader": true.
+4. Usa "heading" para títulos, membretes, fechas destacadas o subtítulos, indicando su alineación ("left", "center" o "right").
+5. Usa "paragraph" para bloques de texto continuo o notas manuscritas.
+6. No incluyas sellos húmedos ni firmas ilegibles como texto; esos elementos gráficos se preservan aparte.`;
 
-    blurred = new cv.Mat();
-    cv.GaussianBlur(gray, blurred, new cv.Size(7, 7), 0);
-
-    let kernelClose = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(11, 11));
-    morph = new cv.Mat();
-    cv.morphologyEx(blurred, morph, cv.MORPH_CLOSE, kernelClose);
-    kernelClose.delete();
-
-    edges = new cv.Mat();
-    cv.Canny(morph, edges, 45, 140);
-
-    let kernelDil = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(5, 5));
-    dilated = new cv.Mat();
-    cv.dilate(edges, dilated, kernelDil);
-    kernelDil.delete();
-
-    contours = new cv.MatVector();
-    hierarchy = new cv.Mat();
-    cv.findContours(dilated, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-    let maxArea = 0;
-    let bestApprox = null;
-    const imgArea = src.rows * src.cols;
-
-    for (let i = 0; i < contours.size(); i++) {
-      const cnt = contours.get(i);
-      const area = cv.contourArea(cnt);
-      // Exigir mínimo 65% del área total para ignorar tablas internas
-      if (area > imgArea * 0.65 && area < imgArea * 0.96 && area > maxArea) {
-        const peri = cv.arcLength(cnt, true);
-        const approx = new cv.Mat();
-        cv.approxPolyDP(cnt, approx, 0.025 * peri, true);
-        if (approx.rows === 4 && cv.isContourConvex(approx)) {
-          maxArea = area;
-          if (bestApprox) bestApprox.delete();
-          bestApprox = approx;
-        } else {
-          approx.delete();
-        }
+  const payload = {
+    contents: [
+      {
+        role: "user",
+        parts: [
+          { text: "Transcribe y estructura completamente este documento manteniendo su distribución de encabezados, párrafos y tablas." },
+          {
+            inlineData: {
+              mimeType: "image/jpeg",
+              data: base64Data
+            }
+          }
+        ]
       }
-      cnt.delete();
+    ],
+    systemInstruction: {
+      parts: [{ text: systemPrompt }]
+    },
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          secciones: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                type: {
+                  type: "STRING",
+                  enum: ["heading", "paragraph", "table"]
+                },
+                text: { type: "STRING" },
+                align: {
+                  type: "STRING",
+                  enum: ["left", "center", "right"]
+                },
+                fontSize: { type: "INTEGER" },
+                hasHeader: { type: "BOOLEAN" },
+                rows: {
+                  type: "ARRAY",
+                  items: {
+                    type: "ARRAY",
+                    items: { type: "STRING" }
+                  }
+                }
+              },
+              required: ["type"]
+            }
+          }
+        },
+        required: ["secciones"]
+      }
     }
+  };
 
-    if (!bestApprox) return null;
+  let lastErr = null;
+  const delays = [1000, 2000, 4000];
 
-    const pts = [];
-    for (let i = 0; i < 4; i++) {
-      pts.push({
-        x: bestApprox.data32S[i * 2] * scaleBack,
-        y: bestApprox.data32S[i * 2 + 1] * scaleBack
+  for (let intento = 0; intento <= delays.length; intento++) {
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errText.slice(0, 180)}`);
+      }
+
+      const result = await response.json();
+      const rawJson = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!rawJson) throw new Error('Respuesta vacía del modelo de visión');
+
+      const parsed = JSON.parse(rawJson);
+      return parsed.secciones || [];
+    } catch (err) {
+      lastErr = err;
+      if (intento < delays.length) {
+        await new Promise(r => setTimeout(r, delays[intento]));
+      }
     }
-    bestApprox.delete();
-
-    pts.sort((a, b) => a.y - b.y);
-    const top = pts.slice(0, 2).sort((a, b) => a.x - b.x);
-    const bot = pts.slice(2, 4).sort((a, b) => a.x - b.x);
-    const ordered = [top[0], top[1], bot[1], bot[0]];
-
-    const a0 = calcularAnguloVertice(ordered[3], ordered[0], ordered[1]);
-    const a1 = calcularAnguloVertice(ordered[0], ordered[1], ordered[2]);
-    const a2 = calcularAnguloVertice(ordered[1], ordered[2], ordered[3]);
-    const a3 = calcularAnguloVertice(ordered[2], ordered[3], ordered[0]);
-
-    if (![a0, a1, a2, a3].every(ang => ang >= 78 && ang <= 102)) return null;
-
-    const wTop = Math.hypot(ordered[1].x - ordered[0].x, ordered[1].y - ordered[0].y);
-    const wBot = Math.hypot(ordered[2].x - ordered[3].x, ordered[2].y - ordered[3].y);
-    const hLeft = Math.hypot(ordered[3].x - ordered[0].x, ordered[3].y - ordered[0].y);
-    const hRight = Math.hypot(ordered[2].x - ordered[1].x, ordered[2].y - ordered[1].y);
-
-    if (Math.min(wTop, wBot) / Math.max(wTop, wBot) < 0.85) return null;
-    if (Math.min(hLeft, hRight) / Math.max(hLeft, hRight) < 0.85) return null;
-
-    return ordered;
-  } catch (e) {
-    return null;
-  } finally {
-    if (src) src.delete();
-    if (gray) gray.delete();
-    if (blurred) blurred.delete();
-    if (morph) morph.delete();
-    if (edges) edges.delete();
-    if (dilated) dilated.delete();
-    if (contours) contours.delete();
-    if (hierarchy) hierarchy.delete();
   }
+
+  throw lastErr || new Error('No se pudo conectar con Gemini Vision');
 }
 
+$('selMotorDoc').onchange = () => {
+  const esIA = $('selMotorDoc').value === 'gemini';
+  $('boxApiKeyGemini').style.display = esIA ? 'flex' : 'none';
+};
+
 /**
- * Rectifica la perspectiva del documento detectado manteniendo su proporción real
+ * Pipeline completo de digitalización documental v17:
+ * - Soporta IA Vision PRO (manuscrito a pulso, cursiva, tablas complejas) y Motor Local Offline
+ * - Endereza inclinación leve sin deformar la hoja
+ * - Preserva sellos húmedos, logos y firmas gráficas
  */
-function rectificarDocumentoPerspectiva(imgElement, corners) {
-  let src, srcTri, dstTri, M, dst;
+$('btnDocProcesar').onclick = async () => {
+  if (STATE.isProcessingOCR || !STATE.docImageRaw) return;
+  STATE.isProcessingOCR = true;
+  $('btnDocProcesar').disabled = true;
+  $('btnDocRotar').disabled = true;
+  $('btnDocProcesar').innerHTML = '<span class="spinner"></span> Reconstruyendo...';
+  $('docProgress').classList.add('active');
+  $('docLog').innerHTML = '';
+
+  const motorSeleccionado = $('selMotorDoc').value;
+
   try {
-    src = cv.imread(imgElement);
-    const wTop = Math.hypot(corners[1].x - corners[0].x, corners[1].y - corners[0].y);
-    const wBot = Math.hypot(corners[2].x - corners[3].x, corners[2].y - corners[3].y);
-    const hLeft = Math.hypot(corners[3].x - corners[0].x, corners[3].y - corners[0].y);
-    const hRight = Math.hypot(corners[2].x - corners[1].x, corners[2].y - corners[1].y);
+    docLog('📥 Cargando documento...', 'info');
+    setDocProgress(10);
+    const img = await cargarImagen(STATE.docImageRaw);
 
-    const avgW = (wTop + wBot) / 2;
-    const avgH = (hLeft + hRight) / 2;
-    const aspect = avgH / (avgW || 1);
+    let canvasDoc = normalizarTamano(img, 1450);
+    if ($('chkAutoCropDoc').checked) {
+      const corners = detectarBordesDocumentoGeneral(img);
+      if (corners) {
+        docLog('✅ Borde exterior de hoja rectificado', 'success');
+        canvasDoc = rectificarDocumentoPerspectiva(img, corners);
+      } else {
+        docLog('📐 Nivelando horizontalidad del documento...', 'info');
+        canvasDoc = autoEnderezarInclinacion(canvasDoc);
+      }
+    } else {
+      canvasDoc = autoEnderezarInclinacion(canvasDoc);
+    }
 
-    const targetW = 1240;
-    const targetH = Math.round(targetW * aspect);
+    STATE.docRectifiedCanvas = canvasDoc;
+    $('docOriginalStage').innerHTML = '';
+    $('docOriginalStage').appendChild(canvasDoc);
+    $('docDimBadge').textContent = `${canvasDoc.width} × ${canvasDoc.height} px`;
+    setDocProgress(28);
 
-    srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-      corners[0].x, corners[0].y,
-      corners[1].x, corners[1].y,
-      corners[2].x, corners[2].y,
-      corners[3].x, corners[3].y
-    ]);
-    dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-      0, 0,
-      targetW - 1, 0,
-      targetW - 1, targetH - 1,
-      0, targetH - 1
-    ]);
+    let sections = [];
+    let wordBlocks = [];
+    let graphicBlocks = [];
 
-    M = cv.getPerspectiveTransform(srcTri, dstTri);
-    dst = new cv.Mat();
-    cv.warpPerspective(src, dst, M, new cv.Size(targetW, targetH), cv.INTER_CUBIC, cv.BORDER_CONSTANT, new cv.Scalar(255, 255, 255, 255));
+    if (motorSeleccionado === 'gemini') {
+      docLog('🧠 Analizando caligrafía manuscrita / estructura con Gemini Vision PRO...', 'info');
+      setDocProgress(45);
 
-    const canvas = document.createElement('canvas');
-    canvas.width = targetW;
-    canvas.height = targetH;
-    cv.imshow(canvas, dst);
-    return canvas;
-  } catch (e) {
-    return normalizarTamano(imgElement, 1240);
+      const seccionesIA = await extraerEstructuraConGeminiVision(canvasDoc);
+      setDocProgress(80);
+      docLog(`✅ IA Vision extrajo ${seccionesIA.length} bloques estructurales`, 'success');
+
+      // Normalizar secciones devueltas por IA
+      sections = seccionesIA.map((s, idx) => {
+        if (s.type === 'table' && Array.isArray(s.rows) && s.rows.length > 0) {
+          const maxCols = Math.max(...s.rows.map(r => Array.isArray(r) ? r.length : 0), 1);
+          const rowsNorm = s.rows.map(r => {
+            const fila = Array.isArray(r) ? r.map(c => String(c ?? '')) : [String(r ?? '')];
+            while (fila.length < maxCols) fila.push('');
+            return fila;
+          });
+          return {
+            id: 'sec_ia_tbl_' + idx,
+            type: 'table',
+            hasHeader: Boolean(s.hasHeader),
+            rows: rowsNorm
+          };
+        } else if (s.type === 'heading') {
+          return {
+            id: 'sec_ia_hd_' + idx,
+            type: 'heading',
+            text: String(s.text || ''),
+            fontSize: Math.max(13, Math.min(20, s.fontSize || 16)),
+            align: ['left', 'center', 'right'].includes(s.align) ? s.align : 'left'
+          };
+        } else {
+          return {
+            id: 'sec_ia_p_' + idx,
+            type: 'paragraph',
+            text: String(s.text || ''),
+            fontSize: Math.max(11, Math.min(15, s.fontSize || 13))
+          };
+        }
+      }).filter(s => (s.type === 'table' && s.rows.length > 0) || (s.text && s.text.trim().length > 0));
+
+      // Extraer sellos/logos de color (alta saturación) para no capturar trazos de bolígrafo azul/negro como imágenes
+      docLog('🖼️ Detectando sellos húmedos y logotipos...', 'info');
+      graphicBlocks = detectarSellosYLogosColor(canvasDoc);
+      if (graphicBlocks.length > 0) {
+        const logosSup = graphicBlocks.filter(g => g.y < canvasDoc.height * 0.22);
+        const sellosInf = graphicBlocks.filter(g => g.y >= canvasDoc.height * 0.22);
+        if (logosSup.length > 0) {
+          sections.unshift({ id: 'sec_media_top', type: 'media', title: 'Logos / Membrete', items: logosSup });
+        }
+        if (sellosInf.length > 0) {
+          sections.push({ id: 'sec_media_bottom', type: 'media', title: 'Sellos / Gráficos', items: sellosInf });
+        }
+        docLog(`✅ ${graphicBlocks.length} sellos/logos preservados`, 'success');
+      }
+    } else {
+      // MODO LOCAL OFFLINE (Tesseract)
+      const cGris = document.createElement('canvas');
+      cGris.width = canvasDoc.width;
+      cGris.height = canvasDoc.height;
+      const ctxG = cGris.getContext('2d');
+      ctxG.filter = 'grayscale(100%) contrast(135%) brightness(104%)';
+      ctxG.drawImage(canvasDoc, 0, 0);
+
+      const worker = await obtenerWorkerTesseract(Tesseract.PSM.AUTO, 'doc');
+      docLog('🧠 Extrayendo palabras y coordenadas espaciales (Local)...', 'info');
+      const result = await worker.recognize(cGris);
+      setDocProgress(82);
+
+      const palabras = result.data.words || [];
+      for (let i = 0; i < palabras.length; i++) {
+        const wObj = palabras[i];
+        const txt = (wObj.text || '').trim();
+        if (!txt) continue;
+        if (/^[|\\/_\-=+*•·.,:;()[\]{}«»"'<>~^`´]+$/.test(txt)) continue;
+        if (wObj.confidence < 35 && txt.length <= 2) continue;
+
+        const bbox = wObj.bbox;
+        const boxH = Math.max(8, bbox.y1 - bbox.y0);
+        const boxW = Math.max(6, bbox.x1 - bbox.x0);
+        const fontSize = Math.max(10, Math.min(36, Math.round(boxH * 0.78)));
+
+        wordBlocks.push({
+          id: 'w_' + i,
+          text: txt,
+          x: bbox.x0,
+          y: bbox.y0,
+          yCenter: (bbox.y0 + bbox.y1) / 2,
+          w: boxW,
+          h: boxH,
+          fontSize,
+          bold: txt === txt.toUpperCase() && /[A-ZÁÉÍÓÚÑ]{3,}/.test(txt)
+        });
+      }
+
+      docLog(`✅ ${wordBlocks.length} palabras reconocidas`, 'success');
+      setDocProgress(90);
+
+      graphicBlocks = detectarElementosGraficos(canvasDoc, wordBlocks);
+      sections = construirEstructuraOrdenada(canvasDoc.width, canvasDoc.height, wordBlocks, graphicBlocks);
+      docLog(`📐 Documento reconstruido en ${sections.length} secciones ordenadas`, 'success');
+    }
+
+    STATE.docLayout = {
+      width: canvasDoc.width,
+      height: canvasDoc.height,
+      sections,
+      textBlocks: wordBlocks,
+      graphicBlocks
+    };
+
+    renderizarDocumentoEditable();
+    habilitarBotonesExportacionDoc(true);
+    setDocProgress(100);
+    showToast(`Documento estructurado: ${sections.length} bloques listos`, 'success');
+
+  } catch (err) {
+    docLog('❌ Error procesando documento: ' + err.message, 'error');
+    console.error(err);
+    showToast('Error: ' + err.message, 'error', 5000);
   } finally {
-    if (src) src.delete();
-    if (srcTri) srcTri.delete();
-    if (dstTri) dstTri.delete();
-    if (M) M.delete();
-    if (dst) dst.delete();
+    STATE.isProcessingOCR = false;
+    $('btnDocProcesar').disabled = false;
+    $('btnDocRotar').disabled = false;
+    $('btnDocProcesar').innerHTML = '✨ CONVERTIR A DOCUMENTO EDITABLE';
   }
-}
+};
 
 /**
- * Segmenta elementos no textuales (sellos húmedos azules/rojos/negros, logos, fotos, firmas, códigos QR)
- * enmascarando primero las zonas donde Tesseract reconoció texto con alta confianza.
+ * Detector especializado en sellos húmedos y logotipos a color (HSV)
+ * para evitar confundir escritura manuscrita con bloques gráficos.
  */
-function detectarElementosGraficos(canvasDoc, textBoxes) {
+function detectarSellosYLogosColor(canvasDoc) {
   const graphics = [];
   if (typeof cv === 'undefined' || !cv.Mat) return graphics;
-
-  let src, gray, hsv, threshGray, maskSat, combined, kernel, closed, contours, hierarchy;
+  let src, rgb, hsv, maskSat, kernel, closed, contours, hierarchy;
   try {
     src = cv.imread(canvasDoc);
     const W = src.cols;
     const H = src.rows;
 
-    gray = new cv.Mat();
-    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-    threshGray = new cv.Mat();
-    cv.adaptiveThreshold(gray, threshGray, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 31, 18);
-
-    let rgb = new cv.Mat();
+    rgb = new cv.Mat();
     cv.cvtColor(src, rgb, cv.COLOR_RGBA2RGB);
     hsv = new cv.Mat();
     cv.cvtColor(rgb, hsv, cv.COLOR_RGB2HSV);
-    rgb.delete();
 
     let channels = new cv.MatVector();
     cv.split(hsv, channels);
     let sat = channels.get(1);
     maskSat = new cv.Mat();
-    cv.threshold(sat, maskSat, 55, 255, cv.THRESH_BINARY);
+    cv.threshold(sat, maskSat, 85, 255, cv.THRESH_BINARY);
     sat.delete();
     channels.delete();
 
-    combined = new cv.Mat();
-    cv.bitwise_or(threshGray, maskSat, combined);
-
-    // Enmascarar palabras reconocidas
-    for (const tb of textBoxes) {
-      const x1 = Math.max(0, Math.floor(tb.x - 5));
-      const y1 = Math.max(0, Math.floor(tb.y - 5));
-      const x2 = Math.min(W - 1, Math.ceil(tb.x + tb.w + 5));
-      const y2 = Math.min(H - 1, Math.ceil(tb.y + tb.h + 5));
-      cv.rectangle(combined, new cv.Point(x1, y1), new cv.Point(x2, y2), new cv.Scalar(0), -1);
-    }
-
-    kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(16, 16));
+    kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(18, 18));
     closed = new cv.Mat();
-    cv.morphologyEx(combined, closed, cv.MORPH_CLOSE, kernel);
+    cv.morphologyEx(maskSat, closed, cv.MORPH_CLOSE, kernel);
 
     contours = new cv.MatVector();
     hierarchy = new cv.Mat();
@@ -837,61 +949,42 @@ function detectarElementosGraficos(canvasDoc, textBoxes) {
       const cnt = contours.get(i);
       const rect = cv.boundingRect(cnt);
       const area = rect.width * rect.height;
+      if (rect.width >= 55 && rect.height >= 45 && area < W * H * 0.35) {
+        const pad = 6;
+        const sx = Math.max(0, rect.x - pad);
+        const sy = Math.max(0, rect.y - pad);
+        const sw = Math.min(W - sx, rect.width + pad * 2);
+        const sh = Math.min(H - sy, rect.height + pad * 2);
 
-      const esTamanoValido = rect.width >= 42 && rect.height >= 35 && area < (W * H * 0.45);
-      const aspect = rect.width / (rect.height || 1);
-      // Descartar líneas horizontales o verticales de cuadrícula de tabla
-      const noEsLineaTabla = aspect > 0.2 && aspect < 6.5;
+        const cropCanvas = document.createElement('canvas');
+        cropCanvas.width = sw;
+        cropCanvas.height = sh;
+        cropCanvas.getContext('2d').drawImage(canvasDoc, sx, sy, sw, sh, 0, 0, sw, sh);
 
-      if (esTamanoValido && noEsLineaTabla) {
-        const solapaTexto = textBoxes.some(tb => {
-          const ix = Math.max(0, Math.min(rect.x + rect.width, tb.x + tb.w) - Math.max(rect.x, tb.x));
-          const iy = Math.max(0, Math.min(rect.y + rect.height, tb.y + tb.h) - Math.max(rect.y, tb.y));
-          return (ix * iy) > (tb.w * tb.h * 0.5);
+        graphics.push({
+          id: 'gfx_ia_' + i,
+          x: sx,
+          y: sy,
+          w: sw,
+          h: sh,
+          tipo: rect.y < H * 0.22 ? 'Logo / Membrete' : 'Sello / Gráfico',
+          dataUrl: cropCanvas.toDataURL('image/png')
         });
-
-        if (!solapaTexto) {
-          const pad = 4;
-          const sx = Math.max(0, rect.x - pad);
-          const sy = Math.max(0, rect.y - pad);
-          const sw = Math.min(W - sx, rect.width + pad * 2);
-          const sh = Math.min(H - sy, rect.height + pad * 2);
-
-          const cropCanvas = document.createElement('canvas');
-          cropCanvas.width = sw;
-          cropCanvas.height = sh;
-          cropCanvas.getContext('2d').drawImage(canvasDoc, sx, sy, sw, sh, 0, 0, sw, sh);
-
-          const tipo = rect.y < H * 0.2 ? 'Logo / Membrete' : 'Sello / Firma / Gráfico';
-
-          graphics.push({
-            id: 'gfx_' + i + '_' + Math.random().toString(36).slice(2, 6),
-            x: sx,
-            y: sy,
-            w: sw,
-            h: sh,
-            tipo,
-            dataUrl: cropCanvas.toDataURL('image/png')
-          });
-        }
       }
       cnt.delete();
     }
   } catch (e) {
-    console.warn('Error segmentando elementos gráficos:', e);
+    console.warn('Error detectando sellos:', e);
   } finally {
     if (src) src.delete();
-    if (gray) gray.delete();
+    if (rgb) rgb.delete();
     if (hsv) hsv.delete();
-    if (threshGray) threshGray.delete();
     if (maskSat) maskSat.delete();
-    if (combined) combined.delete();
     if (kernel) kernel.delete();
     if (closed) closed.delete();
     if (contours) contours.delete();
     if (hierarchy) hierarchy.delete();
   }
-
   return graphics;
 }
 
