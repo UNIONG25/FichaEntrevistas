@@ -256,9 +256,12 @@ h3{color:var(--primary-dark);margin:14px 0 10px;font-size:1.02em}
       </div>
 
       <div id="boxApiKeyGemini" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#f5f3ff;border:1px solid #ddd6fe;padding:10px 14px;border-radius:10px;margin-top:8px">
-        <span style="font-size:.84em;font-weight:700;color:#5b21b6">🔑 Gemini API Key:</span>
-        <input type="password" id="inputGeminiKey" placeholder="Pega tu clave AIzaSy... (se guarda automáticamente en este navegador)" style="flex:1;min-width:240px;padding:7px 10px;border:1px solid #c4b5fd;border-radius:6px;font-size:.84em">
-        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="font-size:.78em;font-weight:700;color:#6d28d9;text-decoration:underline">Obtener clave gratis ↗</a>
+        <span style="font-size:.84em;font-weight:700;color:#5b21b6">🔑 Archivo de Clave (.key / .env / .txt):</span>
+        <button class="btn btn-accent" id="btnCargarArchivoKey" style="padding:6px 12px;font-size:.82em">📂 Cargar Archivo de Clave</button>
+        <input type="file" id="inputArchivoKey" accept=".key,.env,.txt,.json,.cfg,.ini,.xxx,text/*" style="display:none">
+        <input type="password" id="inputGeminiKey" placeholder="O pega tu clave AIzaSy... aquí" style="flex:1;min-width:210px;padding:7px 10px;border:1px solid #c4b5fd;border-radius:6px;font-size:.84em">
+        <span id="badgeKeyStatus" style="font-size:.78em;font-weight:700;color:#64748b">Sin archivo cargado</span>
+        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="font-size:.78em;font-weight:700;color:#6d28d9;text-decoration:underline">Obtener clave ↗</a>
       </div>
 
       <div class="ocr-progress" id="docProgress">
@@ -621,134 +624,71 @@ function setDocProgress(pct) {
   $('docProgressFill').textContent = Math.round(pct) + '%';
 }
 
-const DEFAULT_API_KEY = "AIzaSyDvQ3u9twsNu4fBS_tL3DX-MIV6o-UbG-4";
-
 /**
  * Consulta la API de Gemini Vision (gemini-3-flash-preview) con salida estructurada JSON
  * para transcribir documentos manuscritos (cualquier caligrafía a pulso), cursiva o impresos,
  * preservando encabezados, párrafos y tablas exactas.
  */
 async function extraerEstructuraConGeminiVision(canvasDoc) {
-  const userKey = ($('inputGeminiKey').value || '').trim();
-  const apiKey = userKey.startsWith('AIza') ? userKey : DEFAULT_API_KEY;
+  const apiKey = ($('inputGeminiKey').value || '').trim();
+  if (!apiKey) {
+    const err = new Error('No se ha cargado ningún archivo con la clave API.');
+    err.status = 401;
+    throw err;
+  }
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
   // Comprimir en JPEG de alta nitidez (0.90) para transmisión rápida y máxima legibilidad de trazos finos
   const base64Data = canvasDoc.toDataURL('image/jpeg', 0.90).split(',')[1];
-
-  const systemPrompt = `Eres un motor OCR/ICR empresarial de máxima precisión especializado en transcripción documental y caligrafía manuscrita (letra hecha a pulso, cursiva, letra de molde, recetas, actas, apuntes y tablas).
-Analiza la imagen proporcionada y reconstruye fielmente todo su contenido textual respetando la jerarquía visual y la distribución original de columnas y filas.
-Reglas estrictas:
-1. Transcribe exactamente lo que dice el texto manuscrito o impreso, corrigiendo únicamente ambigüedades evidentes por contexto lingüístico sin inventar datos.
-2. Si hay tablas, listas tabulares, facturas o cuadros con columnas, usa el tipo "table" y llena "rows" como una matriz bidimensional donde todas las filas tengan exactamente el mismo número de columnas.
-3. Si la primera fila de la tabla corresponde a encabezados de columna, marca "hasHeader": true.
-4. Usa "heading" para títulos, membretes, fechas destacadas o subtítulos, indicando su alineación ("left", "center" o "right").
-5. Usa "paragraph" para bloques de texto continuo o notas manuscritas.
-6. No incluyas sellos húmedos ni firmas ilegibles como texto; esos elementos gráficos se preservan aparte.`;
-
-  const payload = {
-    contents: [
-      {
-        role: "user",
-        parts: [
-          { text: "Transcribe y estructura completamente este documento manteniendo su distribución de encabezados, párrafos y tablas." },
-          {
-            inlineData: {
-              mimeType: "image/jpeg",
-              data: base64Data
-            }
-          }
-        ]
-      }
-    ],
-    systemInstruction: {
-      parts: [{ text: systemPrompt }]
-    },
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: "OBJECT",
-        properties: {
-          secciones: {
-            type: "ARRAY",
-            items: {
-              type: "OBJECT",
-              properties: {
-                type: {
-                  type: "STRING",
-                  enum: ["heading", "paragraph", "table"]
-                },
-                text: { type: "STRING" },
-                align: {
-                  type: "STRING",
-                  enum: ["left", "center", "right"]
-                },
-                fontSize: { type: "INTEGER" },
-                hasHeader: { type: "BOOLEAN" },
-                rows: {
-                  type: "ARRAY",
-                  items: {
-                    type: "ARRAY",
-                    items: { type: "STRING" }
-                  }
-                }
-              },
-              required: ["type"]
-            }
-          }
-        },
-        required: ["secciones"]
-      }
-    }
-  };
-
-  let lastErr = null;
-  const delays = [1000, 2000, 4000];
-
-  for (let intento = 0; intento <= delays.length; intento++) {
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        const err = new Error(`HTTP ${response.status}: ${errText.slice(0, 180)}`);
-        err.status = response.status;
-        throw err;
-      }
-
-      const result = await response.json();
-      const rawJson = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!rawJson) throw new Error('Respuesta vacía del modelo de visión');
-
-      const parsed = JSON.parse(rawJson);
-      return parsed.secciones || [];
-    } catch (err) {
-      lastErr = err;
-      // No reintentar si es error de permisos o clave inválida (400, 401, 403)
-      if (err.status === 400 || err.status === 401 || err.status === 403) {
-        throw err;
-      }
-      if (intento < delays.length) {
-        await new Promise(r => setTimeout(r, delays[intento]));
-      }
-    }
-  }
-
+// ... existing code ... -->
   throw lastErr || new Error('No se pudo conectar con Gemini Vision');
 }
 
+function actualizarEstadoVisualKey(clave, origen = 'navegador') {
+  const badge = $('badgeKeyStatus');
+  if (!badge) return;
+  if (clave && clave.startsWith('AIza')) {
+    badge.textContent = `✅ Clave activa (${origen})`;
+    badge.style.color = '#16a34a';
+  } else {
+    badge.textContent = '⚠️ Sin clave cargada';
+    badge.style.color = '#d97706';
+  }
+}
+
 const savedKey = (localStorage.getItem('gemini_api_key_v17') || '').trim();
-const activeInitKey = savedKey.startsWith('AIza') ? savedKey : DEFAULT_API_KEY;
-$('inputGeminiKey').value = activeInitKey;
-localStorage.setItem('gemini_api_key_v17', activeInitKey);
+$('inputGeminiKey').value = savedKey;
+actualizarEstadoVisualKey(savedKey, 'memoria local');
 
 $('inputGeminiKey').addEventListener('input', e => {
-  localStorage.setItem('gemini_api_key_v17', e.target.value.trim());
+  const val = e.target.value.trim();
+  localStorage.setItem('gemini_api_key_v17', val);
+  actualizarEstadoVisualKey(val, 'manual');
 });
+
+$('btnCargarArchivoKey').onclick = () => $('inputArchivoKey').click();
+$('inputArchivoKey').onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const contenido = String(ev.target.result || '').trim();
+    // Extrae automáticamente la clave AIza... ya sea que venga sola en el archivo o en formato KEY=AIza... o JSON
+    const matchKey = contenido.match(/AIza[0-9A-Za-z\-_]{30,}/);
+    const claveExtraida = matchKey ? matchKey[0] : contenido;
+
+    if (claveExtraida && claveExtraida.startsWith('AIza')) {
+      $('inputGeminiKey').value = claveExtraida;
+      localStorage.setItem('gemini_api_key_v17', claveExtraida);
+      actualizarEstadoVisualKey(claveExtraida, file.name);
+      showToast(`🔑 Clave cargada desde "${file.name}"`, 'success');
+    } else {
+      showToast('El archivo seleccionado no contiene una clave válida (AIza...)', 'error');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
 
 $('selMotorDoc').onchange = () => {
   const esIA = $('selMotorDoc').value === 'gemini';
