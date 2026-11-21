@@ -256,9 +256,9 @@ h3{color:var(--primary-dark);margin:14px 0 10px;font-size:1.02em}
       </div>
 
       <div id="boxApiKeyGemini" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#f5f3ff;border:1px solid #ddd6fe;padding:10px 14px;border-radius:10px;margin-top:8px">
-        <span style="font-size:.84em;font-weight:700;color:#5b21b6">🔑 Gemini API Key (Opcional si ya está configurada en el entorno):</span>
-        <input type="password" id="inputGeminiKey" placeholder="Dejar vacío para usar clave integrada o pegar AIzaSy..." style="flex:1;min-width:240px;padding:7px 10px;border:1px solid #c4b5fd;border-radius:6px;font-size:.84em">
-        <span style="font-size:.78em;color:#6d28d9">Lee cualquier letra hecha a pulso, cursiva, tachaduras y tablas complejas.</span>
+        <span style="font-size:.84em;font-weight:700;color:#5b21b6">🔑 Gemini API Key:</span>
+        <input type="password" id="inputGeminiKey" placeholder="Pega tu clave AIzaSy... (se guarda automáticamente en este navegador)" style="flex:1;min-width:240px;padding:7px 10px;border:1px solid #c4b5fd;border-radius:6px;font-size:.84em">
+        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="font-size:.78em;font-weight:700;color:#6d28d9;text-decoration:underline">Obtener clave gratis ↗</a>
       </div>
 
       <div class="ocr-progress" id="docProgress">
@@ -450,8 +450,8 @@ h3{color:var(--primary-dark);margin:14px 0 10px;font-size:1.02em}
 
 <script>
 /* ============================================================
-   OCR STUDIO PRO v16.0 ENTERPRISE
-   Reconstrucción Tabular & Documental + Cédula Venezuela 360°
+   OCR STUDIO PRO v17.0 ENTERPRISE
+   Reconstrucción Tabular & Documental + IA Vision Manuscritos
    Autor: Antonio Altuna | 2026
    ============================================================ */
 
@@ -621,6 +621,8 @@ function setDocProgress(pct) {
   $('docProgressFill').textContent = Math.round(pct) + '%';
 }
 
+const DEFAULT_API_KEY = "AIzaSyDvQ3u9twsNu4fBS_tL3DX-MIV6o-UbG-4";
+
 /**
  * Consulta la API de Gemini Vision (gemini-3-flash-preview) con salida estructurada JSON
  * para transcribir documentos manuscritos (cualquier caligrafía a pulso), cursiva o impresos,
@@ -628,7 +630,7 @@ function setDocProgress(pct) {
  */
 async function extraerEstructuraConGeminiVision(canvasDoc) {
   const userKey = ($('inputGeminiKey').value || '').trim();
-  const apiKey = userKey || "";
+  const apiKey = userKey.startsWith('AIza') ? userKey : DEFAULT_API_KEY;
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
   // Comprimir en JPEG de alta nitidez (0.90) para transmisión rápida y máxima legibilidad de trazos finos
@@ -713,7 +715,9 @@ Reglas estrictas:
 
       if (!response.ok) {
         const errText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errText.slice(0, 180)}`);
+        const err = new Error(`HTTP ${response.status}: ${errText.slice(0, 180)}`);
+        err.status = response.status;
+        throw err;
       }
 
       const result = await response.json();
@@ -724,6 +728,10 @@ Reglas estrictas:
       return parsed.secciones || [];
     } catch (err) {
       lastErr = err;
+      // No reintentar si es error de permisos o clave inválida (400, 401, 403)
+      if (err.status === 400 || err.status === 401 || err.status === 403) {
+        throw err;
+      }
       if (intento < delays.length) {
         await new Promise(r => setTimeout(r, delays[intento]));
       }
@@ -733,14 +741,75 @@ Reglas estrictas:
   throw lastErr || new Error('No se pudo conectar con Gemini Vision');
 }
 
+const savedKey = (localStorage.getItem('gemini_api_key_v17') || '').trim();
+const activeInitKey = savedKey.startsWith('AIza') ? savedKey : DEFAULT_API_KEY;
+$('inputGeminiKey').value = activeInitKey;
+localStorage.setItem('gemini_api_key_v17', activeInitKey);
+
+$('inputGeminiKey').addEventListener('input', e => {
+  localStorage.setItem('gemini_api_key_v17', e.target.value.trim());
+});
+
 $('selMotorDoc').onchange = () => {
   const esIA = $('selMotorDoc').value === 'gemini';
   $('boxApiKeyGemini').style.display = esIA ? 'flex' : 'none';
 };
 
 /**
+ * Ejecuta el motor OCR local calibrado (con umbral adaptativo para trazos finos/bolígrafo)
+ */
+async function ejecutarMotorLocalDocumental(canvasDoc) {
+  const cProc = document.createElement('canvas');
+  cProc.width = canvasDoc.width;
+  cProc.height = canvasDoc.height;
+  const ctxG = cProc.getContext('2d');
+  ctxG.filter = 'grayscale(100%) contrast(145%) brightness(106%)';
+  ctxG.drawImage(canvasDoc, 0, 0);
+
+  const worker = await obtenerWorkerTesseract(Tesseract.PSM.AUTO, 'doc');
+  docLog('🧠 Extrayendo palabras y coordenadas espaciales (Motor Local)...', 'info');
+  const result = await worker.recognize(cProc);
+  setDocProgress(82);
+
+  const wordBlocks = [];
+  const palabras = result.data.words || [];
+  for (let i = 0; i < palabras.length; i++) {
+    const wObj = palabras[i];
+    const txt = (wObj.text || '').trim();
+    if (!txt) continue;
+    if (/^[|\\/_\-=+*•·.,:;()[\]{}«»"'<>~^`´]+$/.test(txt)) continue;
+    if (wObj.confidence < 35 && txt.length <= 2) continue;
+
+    const bbox = wObj.bbox;
+    const boxH = Math.max(8, bbox.y1 - bbox.y0);
+    const boxW = Math.max(6, bbox.x1 - bbox.x0);
+    const fontSize = Math.max(10, Math.min(36, Math.round(boxH * 0.78)));
+
+    wordBlocks.push({
+      id: 'w_' + i,
+      text: txt,
+      x: bbox.x0,
+      y: bbox.y0,
+      yCenter: (bbox.y0 + bbox.y1) / 2,
+      w: boxW,
+      h: boxH,
+      fontSize,
+      bold: txt === txt.toUpperCase() && /[A-ZÁÉÍÓÚÑ]{3,}/.test(txt)
+    });
+  }
+
+  docLog(`✅ ${wordBlocks.length} palabras reconocidas`, 'success');
+  setDocProgress(90);
+
+  const graphicBlocks = detectarElementosGraficos(canvasDoc, wordBlocks);
+  const sections = construirEstructuraOrdenada(canvasDoc.width, canvasDoc.height, wordBlocks, graphicBlocks);
+  docLog(`📐 Documento reconstruido en ${sections.length} secciones ordenadas`, 'success');
+  return { sections, wordBlocks, graphicBlocks };
+}
+
+/**
  * Pipeline completo de digitalización documental v17:
- * - Soporta IA Vision PRO (manuscrito a pulso, cursiva, tablas complejas) y Motor Local Offline
+ * - Soporta IA Vision PRO (manuscrito a pulso, cursiva, tablas complejas) con respaldo automático Local
  * - Endereza inclinación leve sin deformar la hoja
  * - Preserva sellos húmedos, logos y firmas gráficas
  */
@@ -783,108 +852,78 @@ $('btnDocProcesar').onclick = async () => {
     let sections = [];
     let wordBlocks = [];
     let graphicBlocks = [];
+    let usarLocalFallback = (motorSeleccionado !== 'gemini');
 
     if (motorSeleccionado === 'gemini') {
-      docLog('🧠 Analizando caligrafía manuscrita / estructura con Gemini Vision PRO...', 'info');
-      setDocProgress(45);
+      try {
+        docLog('🧠 Analizando caligrafía manuscrita / estructura con Gemini Vision PRO...', 'info');
+        setDocProgress(45);
 
-      const seccionesIA = await extraerEstructuraConGeminiVision(canvasDoc);
-      setDocProgress(80);
-      docLog(`✅ IA Vision extrajo ${seccionesIA.length} bloques estructurales`, 'success');
+        const seccionesIA = await extraerEstructuraConGeminiVision(canvasDoc);
+        setDocProgress(80);
+        docLog(`✅ IA Vision extrajo ${seccionesIA.length} bloques estructurales`, 'success');
 
-      // Normalizar secciones devueltas por IA
-      sections = seccionesIA.map((s, idx) => {
-        if (s.type === 'table' && Array.isArray(s.rows) && s.rows.length > 0) {
-          const maxCols = Math.max(...s.rows.map(r => Array.isArray(r) ? r.length : 0), 1);
-          const rowsNorm = s.rows.map(r => {
-            const fila = Array.isArray(r) ? r.map(c => String(c ?? '')) : [String(r ?? '')];
-            while (fila.length < maxCols) fila.push('');
-            return fila;
-          });
-          return {
-            id: 'sec_ia_tbl_' + idx,
-            type: 'table',
-            hasHeader: Boolean(s.hasHeader),
-            rows: rowsNorm
-          };
-        } else if (s.type === 'heading') {
-          return {
-            id: 'sec_ia_hd_' + idx,
-            type: 'heading',
-            text: String(s.text || ''),
-            fontSize: Math.max(13, Math.min(20, s.fontSize || 16)),
-            align: ['left', 'center', 'right'].includes(s.align) ? s.align : 'left'
-          };
+        sections = seccionesIA.map((s, idx) => {
+          if (s.type === 'table' && Array.isArray(s.rows) && s.rows.length > 0) {
+            const maxCols = Math.max(...s.rows.map(r => Array.isArray(r) ? r.length : 0), 1);
+            const rowsNorm = s.rows.map(r => {
+              const fila = Array.isArray(r) ? r.map(c => String(c ?? '')) : [String(r ?? '')];
+              while (fila.length < maxCols) fila.push('');
+              return fila;
+            });
+            return {
+              id: 'sec_ia_tbl_' + idx,
+              type: 'table',
+              hasHeader: Boolean(s.hasHeader),
+              rows: rowsNorm
+            };
+          } else if (s.type === 'heading') {
+            return {
+              id: 'sec_ia_hd_' + idx,
+              type: 'heading',
+              text: String(s.text || ''),
+              fontSize: Math.max(13, Math.min(20, s.fontSize || 16)),
+              align: ['left', 'center', 'right'].includes(s.align) ? s.align : 'left'
+            };
+          } else {
+            return {
+              id: 'sec_ia_p_' + idx,
+              type: 'paragraph',
+              text: String(s.text || ''),
+              fontSize: Math.max(11, Math.min(15, s.fontSize || 13))
+            };
+          }
+        }).filter(s => (s.type === 'table' && s.rows.length > 0) || (s.text && s.text.trim().length > 0));
+
+        docLog('🖼️ Detectando sellos húmedos y logotipos...', 'info');
+        graphicBlocks = detectarSellosYLogosColor(canvasDoc);
+        if (graphicBlocks.length > 0) {
+          const logosSup = graphicBlocks.filter(g => g.y < canvasDoc.height * 0.22);
+          const sellosInf = graphicBlocks.filter(g => g.y >= canvasDoc.height * 0.22);
+          if (logosSup.length > 0) {
+            sections.unshift({ id: 'sec_media_top', type: 'media', title: 'Logos / Membrete', items: logosSup });
+          }
+          if (sellosInf.length > 0) {
+            sections.push({ id: 'sec_media_bottom', type: 'media', title: 'Sellos / Gráficos', items: sellosInf });
+          }
+          docLog(`✅ ${graphicBlocks.length} sellos/logos preservados`, 'success');
+        }
+      } catch (iaErr) {
+        usarLocalFallback = true;
+        if (iaErr.status === 403 || iaErr.status === 400 || iaErr.status === 401) {
+          docLog('⚠️ Sin clave API de Gemini activa en este servidor. Cambiando automáticamente al Motor Local Offline...', 'warn');
+          showToast('Pega tu Gemini API Key para IA Manuscrita (usando respaldo local)', 'warn', 4500);
         } else {
-          return {
-            id: 'sec_ia_p_' + idx,
-            type: 'paragraph',
-            text: String(s.text || ''),
-            fontSize: Math.max(11, Math.min(15, s.fontSize || 13))
-          };
+          docLog('⚠️ IA Vision no disponible (' + iaErr.message + '). Usando respaldo local...', 'warn');
         }
-      }).filter(s => (s.type === 'table' && s.rows.length > 0) || (s.text && s.text.trim().length > 0));
-
-      // Extraer sellos/logos de color (alta saturación) para no capturar trazos de bolígrafo azul/negro como imágenes
-      docLog('🖼️ Detectando sellos húmedos y logotipos...', 'info');
-      graphicBlocks = detectarSellosYLogosColor(canvasDoc);
-      if (graphicBlocks.length > 0) {
-        const logosSup = graphicBlocks.filter(g => g.y < canvasDoc.height * 0.22);
-        const sellosInf = graphicBlocks.filter(g => g.y >= canvasDoc.height * 0.22);
-        if (logosSup.length > 0) {
-          sections.unshift({ id: 'sec_media_top', type: 'media', title: 'Logos / Membrete', items: logosSup });
-        }
-        if (sellosInf.length > 0) {
-          sections.push({ id: 'sec_media_bottom', type: 'media', title: 'Sellos / Gráficos', items: sellosInf });
-        }
-        docLog(`✅ ${graphicBlocks.length} sellos/logos preservados`, 'success');
       }
-    } else {
-      // MODO LOCAL OFFLINE (Tesseract)
-      const cGris = document.createElement('canvas');
-      cGris.width = canvasDoc.width;
-      cGris.height = canvasDoc.height;
-      const ctxG = cGris.getContext('2d');
-      ctxG.filter = 'grayscale(100%) contrast(135%) brightness(104%)';
-      ctxG.drawImage(canvasDoc, 0, 0);
+    }
 
-      const worker = await obtenerWorkerTesseract(Tesseract.PSM.AUTO, 'doc');
-      docLog('🧠 Extrayendo palabras y coordenadas espaciales (Local)...', 'info');
-      const result = await worker.recognize(cGris);
-      setDocProgress(82);
-
-      const palabras = result.data.words || [];
-      for (let i = 0; i < palabras.length; i++) {
-        const wObj = palabras[i];
-        const txt = (wObj.text || '').trim();
-        if (!txt) continue;
-        if (/^[|\\/_\-=+*•·.,:;()[\]{}«»"'<>~^`´]+$/.test(txt)) continue;
-        if (wObj.confidence < 35 && txt.length <= 2) continue;
-
-        const bbox = wObj.bbox;
-        const boxH = Math.max(8, bbox.y1 - bbox.y0);
-        const boxW = Math.max(6, bbox.x1 - bbox.x0);
-        const fontSize = Math.max(10, Math.min(36, Math.round(boxH * 0.78)));
-
-        wordBlocks.push({
-          id: 'w_' + i,
-          text: txt,
-          x: bbox.x0,
-          y: bbox.y0,
-          yCenter: (bbox.y0 + bbox.y1) / 2,
-          w: boxW,
-          h: boxH,
-          fontSize,
-          bold: txt === txt.toUpperCase() && /[A-ZÁÉÍÓÚÑ]{3,}/.test(txt)
-        });
-      }
-
-      docLog(`✅ ${wordBlocks.length} palabras reconocidas`, 'success');
-      setDocProgress(90);
-
-      graphicBlocks = detectarElementosGraficos(canvasDoc, wordBlocks);
-      sections = construirEstructuraOrdenada(canvasDoc.width, canvasDoc.height, wordBlocks, graphicBlocks);
-      docLog(`📐 Documento reconstruido en ${sections.length} secciones ordenadas`, 'success');
+    if (usarLocalFallback) {
+      const resLocal = await ejecutarMotorLocalDocumental(canvasDoc);
+      sections = resLocal.sections;
+      wordBlocks = resLocal.wordBlocks;
+      graphicBlocks = resLocal.graphicBlocks;
     }
 
     STATE.docLayout = {
